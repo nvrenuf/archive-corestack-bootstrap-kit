@@ -81,6 +81,8 @@ END$$;
 
 ALTER ROLE ingest_api INHERIT;
 ALTER ROLE synth_api INHERIT;
+ALTER ROLE ingest_api SET ROLE ingest_writer;
+ALTER ROLE synth_api SET ROLE synth_reader;
 
 DO $$
 BEGIN
