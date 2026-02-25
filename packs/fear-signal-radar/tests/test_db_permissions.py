@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import uuid4
+
 import psycopg
 import pytest
 from psycopg import errors
@@ -37,16 +39,50 @@ def test_ingest_service_login_permissions(admin_conn, postgres_db):
     apply_migration(admin_conn)
 
     with _conn_as_role(postgres_db, "ingest_api", "ingest_api_pw") as ingest_conn:
+        row_id = str(uuid4())
+        hash_value = f"ingest-hash-{uuid4()}"
         ingest_conn.execute(
             """
-            INSERT INTO signal_items (topic_id, platform, content_type, url, hash)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO public.signal_items (
+                id,
+                topic_id,
+                platform,
+                content_type,
+                url,
+                collected_at,
+                engagement_json,
+                tags_json,
+                language,
+                hash,
+                raw_ref_json
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                now(),
+                '{}'::jsonb,
+                '{}'::jsonb,
+                %s,
+                %s,
+                '{}'::jsonb
+            )
             """,
-            ("work-money", "reddit", "post", "https://example.com/a", "ingest-hash-1"),
+            (
+                row_id,
+                "work-money",
+                "reddit",
+                "post",
+                "https://example.com/a",
+                "en",
+                hash_value,
+            ),
         )
 
         with pytest.raises(errors.InsufficientPrivilege) as select_error:
-            ingest_conn.execute("SELECT * FROM signal_items").fetchall()
+            ingest_conn.execute("SELECT * FROM public.signal_items").fetchall()
         assert select_error.value.sqlstate == "42501"
 
 
