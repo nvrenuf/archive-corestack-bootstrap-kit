@@ -6,7 +6,6 @@ from typing import Any
 from uuid import UUID
 
 import psycopg
-from psycopg import sql
 from psycopg.types.json import Jsonb
 
 from .config import Settings
@@ -22,8 +21,6 @@ def open_conn(settings: Settings):
         password=settings.db_password,
         autocommit=True,
     ) as conn:
-        # Force the intended write-only privilege role for this session.
-        conn.execute(sql.SQL("SET ROLE {}").format(sql.Identifier(settings.db_role)))
         yield conn
 
 
