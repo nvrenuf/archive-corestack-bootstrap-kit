@@ -144,6 +144,44 @@ Goal: Make Corestack enterprise-deployable and sellable with procurement-ready p
 
 ---
 
+## Fear Signal Radar (STA) — Pack: fear-signal-radar
+
+Current pack version: **0.1.0**
+
+### 0.1.0 MVP Execution Order
+
+1. **FSRA-001 Define TopicConfig schema + first topic file**  
+   File: `packs/fear-signal-radar/issues/FSRA-001_define-topicconfig-schema-first-topic-file.md`
+2. **FSRA-002 Postgres schema + migrations for signal_items and radar_runs**  
+   File: `packs/fear-signal-radar/issues/FSRA-002_postgres-schema-migrations-signal-items-radar-runs.md`
+3. **FSRA-003 Ingest API write-only endpoint with auth + sanitization + dedupe**  
+   File: `packs/fear-signal-radar/issues/FSRA-003_ingest-api-write-only-auth-sanitization-dedupe.md`
+4. **FSRA-004 Egress proxy allowlist enforcement (collector-only outbound)**  
+   File: `packs/fear-signal-radar/issues/FSRA-004_egress-proxy-allowlist-enforcement-collector-only-outbound.md`
+5. **FSRA-005 Reddit Collector (top/week + keyword + top comments)**  
+   File: `packs/fear-signal-radar/issues/FSRA-005_reddit-collector-top-week-keyword-top-comments.md`
+6. **FSRA-006 YouTube Collector (recent videos + top comments + velocity proxy)**  
+   File: `packs/fear-signal-radar/issues/FSRA-006_youtube-collector-recent-videos-top-comments-velocity-proxy.md`
+7. **FSRA-007 News/RSS Collector (snippet-only ingest)**  
+   File: `packs/fear-signal-radar/issues/FSRA-007_news-rss-collector-snippet-only-ingest.md`
+8. **FSRA-008 Synthesizer Agent (cluster + score + report JSON+MD export)**  
+   File: `packs/fear-signal-radar/issues/FSRA-008_synthesizer-agent-cluster-score-report-json-md-export.md`
+9. **FSRA-009 End-to-end runner scripts + minimal admin queries**  
+   File: `packs/fear-signal-radar/issues/FSRA-009_end-to-end-runner-scripts-minimal-admin-queries.md`
+10. **FSRA-010 Pack README + Ops runbook + Security model**  
+    File: `packs/fear-signal-radar/issues/FSRA-010_pack-readme-ops-runbook-security-model.md`
+
+### Backlog (0.2.0-0.4.0)
+
+- **0.2.0**: FSRA-011 Velocity + history + trend detection  
+  File: `packs/fear-signal-radar/issues/FSRA-011_velocity-history-trend-detection.md`
+- **0.3.0**: FSRA-012 Verification layer (evidence vs speculation; citations workflow)  
+  File: `packs/fear-signal-radar/issues/FSRA-012_verification-layer-evidence-vs-speculation-citations.md`
+- **0.4.0**: FSRA-013 Dashboard + angle picker + exports  
+  File: `packs/fear-signal-radar/issues/FSRA-013_dashboard-angle-picker-exports.md`
+
+---
+
 ## Notes
 
 - “Controlled Internet Access (Tool Gateway + n8n)” is **not the whole platform**; it is the **first proof** of the Tool System MVP (Milestone 1).
