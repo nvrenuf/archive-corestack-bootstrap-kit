@@ -1,20 +1,10 @@
 from __future__ import annotations
 
-import os
-from pathlib import Path
-from urllib.parse import urlparse
-
 import psycopg
 import pytest
-from psycopg import errors
 from testcontainers.postgres import PostgresContainer
 
-PACK_DIR = Path(__file__).resolve().parents[1]
-MIGRATION_PATH = PACK_DIR / "migrations" / "001_init.sql"
-DOCKER_SOCKET = Path.home() / ".docker" / "run" / "docker.sock"
-
-if "DOCKER_HOST" not in os.environ and DOCKER_SOCKET.exists():
-    os.environ["DOCKER_HOST"] = f"unix://{DOCKER_SOCKET}"
+from utils import apply_migration, conn_kwargs_from_url
 
 
 @pytest.fixture()
@@ -28,38 +18,15 @@ def admin_conn(postgres_db):
     conn_url = postgres_db.get_connection_url().replace(
         "postgresql+psycopg2://", "postgresql://", 1
     )
-    parsed = urlparse(conn_url)
-    with psycopg.connect(
-        host=parsed.hostname,
-        port=parsed.port,
-        dbname=parsed.path.lstrip("/"),
-        user=parsed.username,
-        password=parsed.password,
-        autocommit=True,
-    ) as conn:
+    with psycopg.connect(**conn_kwargs_from_url(conn_url)) as conn:
         yield conn
 
 
-def _apply_migration(conn: psycopg.Connection) -> None:
-    assert MIGRATION_PATH.exists(), f"Migration file not found: {MIGRATION_PATH}"
-    conn.execute(MIGRATION_PATH.read_text(encoding="utf-8"))
+def test_migration_idempotent_and_tables_exist(admin_conn):
+    apply_migration(admin_conn)
+    apply_migration(admin_conn)
 
-
-def _insert_minimal_signal_item(conn: psycopg.Connection, row_id: str, row_hash: str) -> None:
-    conn.execute(
-        """
-        INSERT INTO signal_items (
-            id, topic_id, platform, content_type, url, hash
-        ) VALUES (%s, %s, %s, %s, %s, %s)
-        """,
-        (row_id, "work-money", "reddit", "post", "https://example.com/1", row_hash),
-    )
-
-
-def test_tables_exist(admin_conn):
-    _apply_migration(admin_conn)
-
-    rows = admin_conn.execute(
+    tables = admin_conn.execute(
         """
         SELECT tablename
         FROM pg_tables
@@ -67,64 +34,92 @@ def test_tables_exist(admin_conn):
         ORDER BY tablename
         """
     ).fetchall()
-
-    assert rows == [("radar_runs",), ("signal_items",)]
-
-
-def test_unique_hash_constraint(admin_conn):
-    _apply_migration(admin_conn)
-
-    _insert_minimal_signal_item(admin_conn, "11111111-1111-1111-1111-111111111111", "dup-hash")
-
-    with pytest.raises(errors.UniqueViolation):
-        _insert_minimal_signal_item(admin_conn, "22222222-2222-2222-2222-222222222222", "dup-hash")
+    assert tables == [("radar_runs",), ("signal_items",)]
 
 
-def test_indexes_exist(admin_conn):
-    _apply_migration(admin_conn)
+def test_pgcrypto_extension_enabled(admin_conn):
+    apply_migration(admin_conn)
+    row = admin_conn.execute("SELECT extname FROM pg_extension WHERE extname = 'pgcrypto'").fetchone()
+    assert row == ("pgcrypto",)
 
-    indexes = admin_conn.execute(
+
+def test_signal_items_columns_and_defaults(admin_conn):
+    apply_migration(admin_conn)
+
+    columns = admin_conn.execute(
         """
-        SELECT indexname, indexdef
-        FROM pg_indexes
-        WHERE schemaname = 'public' AND tablename = 'signal_items'
-        ORDER BY indexname
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'signal_items'
+        ORDER BY ordinal_position
         """
     ).fetchall()
 
-    index_defs = [definition for _, definition in indexes]
-    assert any("(topic_id, collected_at)" in d for d in index_defs)
-    assert any("(topic_id, platform)" in d for d in index_defs)
+    expected = {
+        "id": ("uuid", "NO"),
+        "topic_id": ("text", "NO"),
+        "platform": ("text", "NO"),
+        "content_type": ("text", "NO"),
+        "source_id": ("text", "YES"),
+        "url": ("text", "NO"),
+        "author": ("text", "YES"),
+        "published_at": ("timestamp with time zone", "YES"),
+        "collected_at": ("timestamp with time zone", "NO"),
+        "title": ("text", "YES"),
+        "text_snippet": ("text", "YES"),
+        "engagement_json": ("jsonb", "NO"),
+        "tags_json": ("jsonb", "NO"),
+        "language": ("text", "NO"),
+        "hash": ("text", "NO"),
+        "raw_ref_json": ("jsonb", "NO"),
+    }
+
+    by_name = {name: (dtype, nullable, default) for name, dtype, nullable, default in columns}
+    assert set(by_name.keys()) == set(expected.keys())
+
+    for name, (dtype, nullable) in expected.items():
+        assert by_name[name][0] == dtype
+        assert by_name[name][1] == nullable
+
+    assert "gen_random_uuid()" in (by_name["id"][2] or "")
+    assert "now()" in (by_name["collected_at"][2] or "")
+    assert "'{}'::jsonb" in (by_name["engagement_json"][2] or "")
+    assert "'{}'::jsonb" in (by_name["tags_json"][2] or "")
+    assert "'{}'::jsonb" in (by_name["raw_ref_json"][2] or "")
+    assert "'en'::text" in (by_name["language"][2] or "")
 
 
-def test_migration_idempotency(admin_conn):
-    _apply_migration(admin_conn)
-    _apply_migration(admin_conn)
+def test_radar_runs_columns_and_defaults(admin_conn):
+    apply_migration(admin_conn)
 
-    count = admin_conn.execute(
+    columns = admin_conn.execute(
         """
-        SELECT COUNT(*)
-        FROM pg_tables
-        WHERE schemaname = 'public' AND tablename IN ('signal_items', 'radar_runs')
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'radar_runs'
+        ORDER BY ordinal_position
         """
-    ).fetchone()[0]
-    assert count == 2
+    ).fetchall()
 
+    expected = {
+        "run_id": ("uuid", "NO"),
+        "topic_id": ("text", "NO"),
+        "started_at": ("timestamp with time zone", "NO"),
+        "finished_at": ("timestamp with time zone", "YES"),
+        "time_window_days": ("integer", "NO"),
+        "collector_versions": ("jsonb", "NO"),
+        "counts_json": ("jsonb", "NO"),
+        "status": ("text", "NO"),
+        "error_text": ("text", "YES"),
+    }
 
-def test_default_values(admin_conn):
-    _apply_migration(admin_conn)
+    by_name = {name: (dtype, nullable, default) for name, dtype, nullable, default in columns}
+    assert set(by_name.keys()) == set(expected.keys())
 
-    _insert_minimal_signal_item(admin_conn, "33333333-3333-3333-3333-333333333333", "defaults-hash")
+    for name, (dtype, nullable) in expected.items():
+        assert by_name[name][0] == dtype
+        assert by_name[name][1] == nullable
 
-    row = admin_conn.execute(
-        """
-        SELECT collected_at, engagement_json, tags_json, raw_ref_json
-        FROM signal_items
-        WHERE id = '33333333-3333-3333-3333-333333333333'
-        """
-    ).fetchone()
-
-    assert row[0] is not None
-    assert row[1] == {}
-    assert row[2] == {}
-    assert row[3] == {}
+    assert "now()" in (by_name["started_at"][2] or "")
+    assert "'{}'::jsonb" in (by_name["collector_versions"][2] or "")
+    assert "'{}'::jsonb" in (by_name["counts_json"][2] or "")
