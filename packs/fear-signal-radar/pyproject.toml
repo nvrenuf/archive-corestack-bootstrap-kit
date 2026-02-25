@@ -24,8 +24,8 @@ dev = [
   "testcontainers[postgres]>=4.8.0,<5.0.0",
 ]
 
-[tool.setuptools]
-packages = ["fsra"]
+[tool.setuptools.packages.find]
+include = ["fsra*"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
