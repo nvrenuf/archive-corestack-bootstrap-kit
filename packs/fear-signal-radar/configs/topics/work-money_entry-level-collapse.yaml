@@ -1,0 +1,40 @@
+topic_id: work-money_entry-level-collapse
+pillar: work-money
+description: Track early fear signals around collapse of entry-level job opportunities and pay stability.
+keywords_primary:
+  - entry level jobs
+  - new grad unemployment
+  - hiring freeze
+  - layoffs
+keywords_secondary:
+  - no callbacks
+  - ghost jobs
+  - underemployment
+  - recession fears
+platforms_enabled:
+  - reddit
+  - youtube
+  - news
+subreddits:
+  - jobs
+  - recruitinghell
+  - cscareerquestions
+youtube_queries:
+  - entry level job market
+  - layoffs 2026
+news_queries:
+  - entry level hiring freeze
+  - graduate unemployment trend
+rss_feeds:
+  - https://news.google.com/rss/search?q=entry+level+jobs
+  - https://feeds.reuters.com/reuters/businessNews
+time_window_days: 7
+language: en
+scoring_weights:
+  volume: 2.0
+  velocity: 3.0
+  cross_platform: 4.0
+  impact: 5.0
+exclusions:
+  - satire
+  - sponsored

@@ -13,3 +13,8 @@ build/*
 .vscode/
 .idea/
 __pycache__/
+
+# FSRA pack local python artifacts
+packs/fear-signal-radar/.venv/
+packs/fear-signal-radar/*.egg-info/
+packs/fear-signal-radar/fear_signal_radar.egg-info/
