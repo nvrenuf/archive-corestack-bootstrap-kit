@@ -24,17 +24,27 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 2
 fi
 
-if [[ -S /var/run/docker.sock ]]; then
-  export DOCKER_HOST="unix:///var/run/docker.sock"
-elif [[ -S "$HOME/.docker/run/docker.sock" ]]; then
-  export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
-fi
+ORIGINAL_DOCKER_HOST="${DOCKER_HOST-}"
+unset DOCKER_HOST
 
-echo "Using DOCKER_HOST=${DOCKER_HOST:-<default>}"
+if docker ps >/dev/null 2>&1; then
+  echo "Docker reachable via context; DOCKER_HOST not required"
+else
+  if [[ -S /var/run/docker.sock ]]; then
+    export DOCKER_HOST="unix:///var/run/docker.sock"
+  elif [[ -S "$HOME/.docker/run/docker.sock" ]]; then
+    export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
+  fi
 
-if ! docker ps >/dev/null 2>&1; then
-  echo "Start Docker Desktop"
-  exit 2
+  echo "Using DOCKER_HOST=${DOCKER_HOST:-<default>}"
+  if ! docker ps >/dev/null 2>&1; then
+    if [[ -n "$ORIGINAL_DOCKER_HOST" ]]; then
+      echo "Original DOCKER_HOST was: $ORIGINAL_DOCKER_HOST"
+    fi
+    echo "Start Docker Desktop"
+    print_docker_socket_help
+    exit 2
+  fi
 fi
 
 status=0
