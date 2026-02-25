@@ -32,14 +32,31 @@ def _conn_kwargs_from_url(conn_url: str) -> dict[str, object]:
 
 
 @pytest.fixture()
-def postgres_db():
+def postgres_container():
     with PostgresContainer("postgres:16-alpine") as container:
+        conn_url = container.get_connection_url().replace(
+            "postgresql+psycopg2://", "postgresql://", 1
+        )
+        parsed = urlparse(conn_url)
+        os.environ["INGEST_TOKEN"] = "test-ingest-token"
+        os.environ["INGEST_DB_HOST"] = parsed.hostname or "localhost"
+        os.environ["INGEST_DB_PORT"] = str(parsed.port or 5432)
+        os.environ["INGEST_DB_NAME"] = parsed.path.lstrip("/")
+        os.environ["INGEST_DB_USER"] = "ingest_api"
+        os.environ["INGEST_DB_PASSWORD"] = "ingest_api_pw"
+        os.environ["INGEST_MAX_BODY_BYTES"] = str(256 * 1024)
+        os.environ["MAX_BODY_BYTES"] = str(256 * 1024)
         yield container
 
 
 @pytest.fixture()
-def admin_conn(postgres_db):
-    conn_url = postgres_db.get_connection_url().replace(
+def postgres_db(postgres_container):
+    return postgres_container
+
+
+@pytest.fixture()
+def admin_conn(postgres_container):
+    conn_url = postgres_container.get_connection_url().replace(
         "postgresql+psycopg2://", "postgresql://", 1
     )
     with psycopg.connect(**_conn_kwargs_from_url(conn_url)) as conn:
@@ -54,23 +71,14 @@ def migrated_db(admin_conn):
 
 
 @pytest.fixture()
-def ingest_env(postgres_db, migrated_db, monkeypatch):
-    conn_url = postgres_db.get_connection_url().replace(
-        "postgresql+psycopg2://", "postgresql://", 1
-    )
-    parsed = urlparse(conn_url)
-
-    monkeypatch.setenv("INGEST_TOKEN", "test-ingest-token")
-    monkeypatch.setenv("INGEST_DB_HOST", parsed.hostname or "localhost")
-    monkeypatch.setenv("INGEST_DB_PORT", str(parsed.port or 5432))
-    monkeypatch.setenv("INGEST_DB_NAME", parsed.path.lstrip("/"))
-    monkeypatch.setenv("INGEST_DB_USER", "ingest_api")
-    monkeypatch.setenv("INGEST_DB_PASSWORD", "ingest_api_pw")
-    monkeypatch.setenv("INGEST_MAX_BODY_BYTES", str(256 * 1024))
+def ingest_env(postgres_container, migrated_db):
+    assert os.environ.get("INGEST_DB_HOST"), "INGEST_DB_HOST was not injected"
 
 
 @pytest.fixture()
 def app(ingest_env):
+    assert os.environ.get("INGEST_DB_HOST") is not None, "INGEST_DB_HOST must be set before app import"
+
     service_path = str(SERVICE_ROOT)
     if service_path not in sys.path:
         sys.path.insert(0, service_path)
@@ -91,7 +99,8 @@ def app(ingest_env):
 
 
 @pytest.fixture()
-def client(app):
+def client(postgres_container, ingest_env, app):
+    assert os.environ.get("INGEST_DB_HOST") is not None, "INGEST_DB_HOST must be set before creating client"
     from fastapi.testclient import TestClient
 
     with TestClient(app) as test_client:
