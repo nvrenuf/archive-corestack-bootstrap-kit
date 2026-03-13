@@ -56,6 +56,17 @@ function renderRunSummary(run) {
       <strong>${run.workflowName}</strong>
       <span> · ${run.status}</span>
       <span> · ${run.currentStepTitle}</span>
+      ${run.caseId ? `<span> · Case ${run.caseId}</span>` : ""}
+    </li>
+  `;
+}
+
+function renderCaseSummary(caseItem) {
+  return `
+    <li>
+      <strong>${caseItem.title}</strong>
+      <span> · ${caseItem.status}</span>
+      <span> · ${caseItem.runIds.length} linked run(s)</span>
     </li>
   `;
 }
@@ -63,6 +74,7 @@ function renderRunSummary(run) {
 function renderHomeSurface(context = {}) {
   const activeRuns = context.activeRuns ?? [];
   const recentRuns = context.recentRuns ?? [];
+  const recentCases = context.recentCases ?? [];
 
   return `
     <section class="surface-grid" data-surface-id="home">
@@ -96,16 +108,23 @@ function renderHomeSurface(context = {}) {
       <article class="shell-panel">
         <span class="surface-meta">Recent work</span>
         <h3>Recent cases and runs</h3>
-        ${
-          recentRuns.length
-            ? `<ul class="placeholder-list">${recentRuns.map(renderRunSummary).join("")}</ul>`
-            : `
-              <ul class="placeholder-list">
-                <li>Recent Security/OSINT work will be linked here after the run contract lands.</li>
-                <li>Core owns the surface while modules contribute context.</li>
-              </ul>
-            `
-        }
+        <div class="stacked-lists">
+          ${
+            recentCases.length
+              ? `<ul class="placeholder-list">${recentCases.map(renderCaseSummary).join("")}</ul>`
+              : `
+                <ul class="placeholder-list">
+                  <li>Recent Security/OSINT work will be linked here after the run contract lands.</li>
+                  <li>Core owns the surface while modules contribute context.</li>
+                </ul>
+              `
+          }
+          ${
+            recentRuns.length
+              ? `<ul class="placeholder-list">${recentRuns.map(renderRunSummary).join("")}</ul>`
+              : ""
+          }
+        </div>
       </article>
     </section>
   `;
@@ -113,6 +132,7 @@ function renderHomeSurface(context = {}) {
 
 function renderLauncherSurface(context = {}) {
   const startPath = context.startPathLabel ?? "Alert triage and investigation";
+  const attachTarget = context.attachableCase;
 
   return `
     <section class="surface-grid" data-surface-id="launcher">
@@ -127,7 +147,12 @@ function renderLauncherSurface(context = {}) {
         <p>The first domain module contributes workflow start paths without owning a separate desktop.</p>
         <div class="action-row">
           <a class="action-link" href="#/launcher?start=security-osint-alert-triage">Open workflow start path</a>
-          <button class="action-button" type="button" data-start-workflow="security-osint.alert-triage">${startPath}</button>
+          <button class="action-button" type="button" data-start-workflow="security-osint.alert-triage" data-case-mode="new">${startPath}</button>
+          ${
+            attachTarget
+              ? `<button class="action-button secondary" type="button" data-start-workflow="security-osint.alert-triage" data-case-mode="attach" data-case-id="${attachTarget.caseId}">Attach run to ${attachTarget.title}</button>`
+              : `<span class="action-note">Create a case first to unlock attach-to-case launching.</span>`
+          }
         </div>
       </article>
       <article class="shell-panel">

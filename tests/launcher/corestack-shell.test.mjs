@@ -54,9 +54,11 @@ test("home renders the core entry widgets for active work, approvals, and recent
 });
 
 test("launcher exposes a Security\/OSINT workflow start path inside the shared shell", () => {
-  const rendered = renderRouteContent(getRoute("launcher"));
+  const rendered = renderRouteContent(getRoute("launcher"), {
+    attachableCase: { caseId: "case-1", title: "Security / OSINT alert triage" },
+  });
 
   assert.match(rendered, /Security \/ OSINT Module 1/);
   assert.match(rendered, /Alert triage and investigation/);
-  assert.match(rendered, /Open workflow start path/);
+  assert.match(rendered, /Attach run to Security \/ OSINT alert triage/);
 });

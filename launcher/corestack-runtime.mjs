@@ -198,6 +198,12 @@ export function createRunStore({
         return run;
       });
     },
+    linkCase(runId, caseId) {
+      return updateRun(runId, (run) => {
+        run.caseId = caseId;
+        return run;
+      });
+    },
   };
 }
 

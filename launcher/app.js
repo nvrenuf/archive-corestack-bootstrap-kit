@@ -6,6 +6,9 @@ import {
   renderRouteContent,
 } from "./corestack-shell.mjs";
 import {
+  createCaseStore,
+} from "./corestack-cases.mjs";
+import {
   createBrowserStorage,
   createRunStore,
   createWorkflowRegistry,
@@ -30,7 +33,9 @@ const workflowRegistry = createWorkflowRegistry([
   },
 ]);
 
-const runStore = createRunStore({ storage: createBrowserStorage() });
+const storage = createBrowserStorage();
+const runStore = createRunStore({ storage });
+const caseStore = createCaseStore({ storage });
 
 function renderNav(activeRouteId) {
   navRoot.innerHTML = TOP_LEVEL_ROUTES.map((route, index) => `
@@ -47,17 +52,20 @@ function renderNav(activeRouteId) {
 
 function getRouteContext(routeId) {
   const runs = runStore.listRuns();
+  const cases = caseStore.listCases();
 
   if (routeId === "home") {
     return {
       activeRuns: runs.filter((run) => run.status === "running" || run.status === "blocked").slice(0, 3),
       recentRuns: runs.slice(0, 3),
+      recentCases: cases.slice(0, 3),
     };
   }
 
   if (routeId === "launcher") {
     return {
       startPathLabel: "Launch alert triage run",
+      attachableCase: cases[0] ?? null,
     };
   }
 
@@ -80,13 +88,29 @@ contentRoot.addEventListener("click", (event) => {
   }
 
   const workflowId = trigger.getAttribute("data-start-workflow");
-  launchWorkflowRun({
+  const caseMode = trigger.getAttribute("data-case-mode") ?? "new";
+  const requestedCaseId = trigger.getAttribute("data-case-id");
+
+  const run = launchWorkflowRun({
     registry: workflowRegistry,
     runStore,
     workflowId,
     actor: { actorId: "local-operator", actorType: "user" },
     input: { source: "launcher" },
   });
+
+  if (caseMode === "attach" && requestedCaseId) {
+    caseStore.attachRun(requestedCaseId, run);
+    runStore.linkCase(run.runId, requestedCaseId);
+  } else {
+    const linkedCase = caseStore.createCaseFromRun({
+      run,
+      title: "Security / OSINT alert triage",
+      owner: { actorId: "local-operator", actorType: "user" },
+    });
+    runStore.linkCase(run.runId, linkedCase.caseId);
+  }
+
   window.location.hash = "#/home";
   renderRoute();
 });

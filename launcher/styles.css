@@ -229,9 +229,18 @@ body {
   cursor: pointer;
 }
 
+.action-button.secondary {
+  background: #efe6d5;
+}
+
 .action-note {
   color: var(--muted);
   font-size: 13px;
+}
+
+.stacked-lists {
+  display: grid;
+  gap: 14px;
 }
 
 @media (max-width: 900px) {
