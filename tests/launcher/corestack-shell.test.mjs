@@ -5,6 +5,7 @@ import {
   TOP_LEVEL_ROUTES,
   getRoute,
   normalizeRoute,
+  renderRouteContent,
   renderSurfacePlaceholder,
 } from "../../launcher/corestack-shell.mjs";
 
@@ -41,4 +42,20 @@ test("placeholder rendering stays core-owned and does not imply a separate modul
 
   assert.match(rendered, /core-owned surface/);
   assert.match(rendered, /No separate product shell or module-owned navigation is introduced/);
+});
+
+test("home renders the core entry widgets for active work, approvals, and recent work", () => {
+  const rendered = renderRouteContent(getRoute("home"));
+
+  assert.match(rendered, /Active work/);
+  assert.match(rendered, /Approvals/);
+  assert.match(rendered, /Recent work/);
+});
+
+test("launcher exposes a Security\/OSINT workflow start path inside the shared shell", () => {
+  const rendered = renderRouteContent(getRoute("launcher"));
+
+  assert.match(rendered, /Security \/ OSINT Module 1/);
+  assert.match(rendered, /Alert triage and investigation/);
+  assert.match(rendered, /Open workflow start path/);
 });

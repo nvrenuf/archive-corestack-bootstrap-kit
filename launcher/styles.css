@@ -156,6 +156,12 @@ body {
   padding: 22px;
 }
 
+.surface-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .surface-placeholder {
   display: grid;
   gap: 12px;
@@ -164,6 +170,15 @@ body {
   border: 1px solid var(--line);
   border-radius: 18px;
   box-shadow: var(--shadow);
+}
+
+.feature-panel {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(178, 76, 47, 0.13), rgba(255, 250, 240, 0.98));
+}
+
+.module-card {
+  background: linear-gradient(180deg, rgba(232, 220, 196, 0.68), rgba(255, 250, 240, 0.94));
 }
 
 .surface-meta {
@@ -183,6 +198,30 @@ body {
   color: var(--muted);
 }
 
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fffaf0;
+  font: 600 14px/1 "Avenir Next", sans-serif;
+  text-decoration: none;
+}
+
+.action-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -194,5 +233,9 @@ body {
 
   .shell-header {
     flex-direction: column;
+  }
+
+  .surface-grid {
+    grid-template-columns: 1fr;
   }
 }

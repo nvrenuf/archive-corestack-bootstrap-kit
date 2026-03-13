@@ -3,7 +3,7 @@ import {
   getRoute,
   normalizeRoute,
   renderModuleHook,
-  renderSurfacePlaceholder,
+  renderRouteContent,
 } from "./corestack-shell.mjs";
 
 const navRoot = document.querySelector("[data-primary-nav]");
@@ -30,7 +30,7 @@ function renderRoute() {
   titleRoot.textContent = route.label;
   renderNav(route.id);
   moduleHookRoot.innerHTML = renderModuleHook();
-  contentRoot.innerHTML = renderSurfacePlaceholder(route);
+  contentRoot.innerHTML = renderRouteContent(route);
 }
 
 window.addEventListener("hashchange", renderRoute);
