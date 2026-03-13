@@ -9,18 +9,26 @@ import {
   createCaseStore,
 } from "./corestack-cases.mjs";
 import {
-  buildRunPolicyReference,
-  createPolicyDecision,
-} from "./corestack-policy.mjs";
-import {
   createBrowserStorage,
   createRunStore,
   createWorkflowRegistry,
-  launchWorkflowRun,
 } from "./corestack-runtime.mjs";
 import {
   createApprovalStore,
 } from "./corestack-approvals.mjs";
+import {
+  createEvidenceStore,
+} from "./corestack-evidence.mjs";
+import {
+  createModelExecutionHooks,
+} from "./corestack-model-execution.mjs";
+import {
+  createModelRegistry,
+  createModelRouter,
+} from "./corestack-model-routing.mjs";
+import {
+  createAlertTriageWorkflowService,
+} from "./corestack-security-osint-alert-triage.mjs";
 import {
   createAuditEventStore,
 } from "./corestack-audit.mjs";
@@ -63,6 +71,41 @@ const approvalStore = createApprovalStore({
   storage,
   emitEvent: ({ event_type, timestamp, correlation, payload }) =>
     auditStore.recordEvent({ eventType: event_type, timestamp, correlation, payload }),
+});
+const evidenceStore = createEvidenceStore({
+  storage,
+  runStore,
+  caseStore,
+  emitEvent: ({ event_type, timestamp, correlation, payload }) =>
+    auditStore.recordEvent({ eventType: event_type, timestamp, correlation, payload }),
+});
+
+const modelRegistry = createModelRegistry([
+  {
+    id: "local.mistral-small",
+    kind: "llm",
+    providerType: "local",
+    localFirst: true,
+    status: { available: true },
+    trustTags: ["self_hosted", "no_egress"],
+    capabilities: ["summarize", "extract.entities"],
+  },
+]);
+const modelRouter = createModelRouter({ registry: modelRegistry });
+const modelExecutionHooks = createModelExecutionHooks({
+  emitEvent: ({ event_type, timestamp, correlation, payload }) =>
+    auditStore.recordEvent({ eventType: event_type, timestamp, correlation, payload }),
+});
+
+const alertTriageWorkflowService = createAlertTriageWorkflowService({
+  workflowRegistry,
+  runStore,
+  caseStore,
+  approvalStore,
+  evidenceStore,
+  modelRouter,
+  modelExecutionHooks,
+  auditStore,
 });
 
 function getSelectedApprovalIdFromHash() {
@@ -145,91 +188,29 @@ contentRoot.addEventListener("click", (event) => {
     const workflowId = trigger.getAttribute("data-start-workflow");
     const caseMode = trigger.getAttribute("data-case-mode") ?? "new";
     const requestedCaseId = trigger.getAttribute("data-case-id");
-    const workflow = workflowRegistry.get(workflowId);
-    const existingCase = requestedCaseId ? caseStore.getCase(requestedCaseId) : null;
     const actor = { actorId: "local-operator", actorType: "user" };
 
-    const run = launchWorkflowRun({
-      registry: workflowRegistry,
-      runStore,
+    const result = alertTriageWorkflowService.startAlertTriage({
       workflowId,
       actor,
+      caseMode,
+      requestedCaseId: caseMode === "attach" ? requestedCaseId : null,
       input: {
-        source: "launcher",
-        ...buildRunPolicyReference({
-          workflow,
-          actor,
-          caseRecord: existingCase,
-        }),
+        alert: {
+          alertId: `alert-${Date.now()}`,
+          title: "Unusual login behavior",
+          severity: "medium",
+          source: "launcher-demo",
+          description: "Launcher-started alert triage run",
+        },
       },
     });
 
-    let linkedCaseId = null;
-    if (caseMode === "attach" && requestedCaseId) {
-      caseStore.attachRun(requestedCaseId, run);
-      runStore.linkCase(run.runId, requestedCaseId);
-      linkedCaseId = requestedCaseId;
+    if (result.status === "pending_approval") {
+      window.location.hash = `#/approvals?approvalId=${result.approval.approvalId}`;
     } else {
-      const linkedCase = caseStore.createCaseFromRun({
-        run,
-        title: "Security / OSINT alert triage",
-        owner: { actorId: "local-operator", actorType: "user" },
-      });
-      runStore.linkCase(run.runId, linkedCase.caseId);
-      linkedCaseId = linkedCase.caseId;
+      window.location.hash = "#/home";
     }
-
-    const policyDecision = createPolicyDecision({
-      decisionId: `policy-${run.runId}`,
-      requestId: `request-${run.runId}`,
-      outcome: "require_approval",
-      reasons: [
-        { code: "HUMAN_REVIEW_REQUIRED", message: "Analyst checkpoint requires explicit approval before continuation." },
-      ],
-      approval: {
-        required: true,
-        subject_ref: `run:${run.runId}:review`,
-        approver_role: "analyst",
-      },
-      audit: {
-        correlation_id: run.policyContext?.correlation_id ?? `${workflow.id}:${run.runId}`,
-      },
-    });
-
-    runStore.appendPolicyDecision(run.runId, policyDecision);
-
-    const approval = approvalStore.createApproval({
-      governedAction: {
-        type: "workflow_step",
-        id: `${run.runId}:review`,
-        summary: "Proceed from analyst review checkpoint",
-        correlationId: policyDecision.audit.correlation_id,
-      },
-      links: {
-        runId: run.runId,
-        workflowId: workflow.id,
-        caseId: linkedCaseId,
-        policyDecisionId: policyDecision.decision_id,
-      },
-      policyDecision,
-      subject: {
-        summary: "Alert triage review checkpoint",
-        targetType: "workflow_step",
-        targetId: "review",
-      },
-      reasonContext: {
-        rationale: "Require analyst confirmation before advancing governed action.",
-      },
-      requestedBy: actor,
-    });
-
-    runStore.markPendingApproval(run.runId, {
-      stepId: "review",
-      approvalId: approval.approvalId,
-      reason: "policy.require_approval",
-    });
-
-    window.location.hash = `#/approvals?approvalId=${approval.approvalId}`;
     renderRoute();
     return;
   }
@@ -242,27 +223,12 @@ contentRoot.addEventListener("click", (event) => {
   const action = approvalAction.getAttribute("data-approval-action");
   const approvalId = approvalAction.getAttribute("data-approval-id");
   const actor = { actorId: "local-reviewer", actorType: "user" };
-  const approval = approvalStore.getApproval(approvalId);
-  if (!approval) {
-    return;
-  }
-
   if (action === "approve") {
-    approvalStore.approveApproval(approvalId, { actor, rationale: "Approved in MVP queue" });
-    runStore.resolveApprovalCheckpoint(approval.links.runId, {
-      stepId: "review",
-      approvalId,
-      outcome: "approved",
-    });
+    alertTriageWorkflowService.resolveAlertTriageApproval({ approvalId, action: "approve", actor });
   }
 
   if (action === "deny") {
-    approvalStore.denyApproval(approvalId, { actor, rationale: "Denied in MVP queue" });
-    runStore.resolveApprovalCheckpoint(approval.links.runId, {
-      stepId: "review",
-      approvalId,
-      outcome: "denied",
-    });
+    alertTriageWorkflowService.resolveAlertTriageApproval({ approvalId, action: "deny", actor });
   }
 
   window.location.hash = "#/approvals";

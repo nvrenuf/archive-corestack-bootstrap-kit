@@ -68,6 +68,7 @@ Goal: Deliver the minimum secure Corestack control plane that can host Module 1.
 - [x] Define and implement model registry and local-first routing contract (`current branch head`, PR TBD)
 - [x] Add model execution logging and external-provider restriction hooks (`current branch head`, PR TBD)
 - [x] Register Security/OSINT Module 1 through the core module contract (`current branch head`, PR TBD)
+- [x] Implement first end-to-end Module 1 workflow: alert triage and investigation (`current branch head`, PR TBD)
 
 Note: These are MVP-slice thin-slice reconciliations. Keep Milestone issues #4/#18/#21 open until full acceptance criteria are satisfied.
 

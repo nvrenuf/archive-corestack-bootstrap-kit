@@ -752,6 +752,10 @@ Deliver the narrowest real workflow that proves the platform direction.
 
 - module-owned workflow on core-owned contracts
 
+##### Status
+
+- completed (thin end-to-end alert triage workflow launched from control plane with run/case linkage, policy approval branch, model routing/execution hooks, and evidence/finding/audit emissions)
+
 ##### Status target
 
 - MVP

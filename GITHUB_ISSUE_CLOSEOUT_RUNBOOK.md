@@ -127,3 +127,15 @@ Completed in thin-slice MVP scope.
 Implemented a reusable core-owned module registration contract (stable module identifiers, display labels, availability status, declared capabilities, control-plane metadata, registration/loading shape, and future association fields) and registered Security/OSINT Module 1 through that contract for launcher/modules visibility without introducing marketplace behavior (commit `current branch head`, PR TBD).
 
 Keeping full Module 1 workflow implementation tracked under Issue 7.2.
+
+## Issues to close when alert triage workflow PR merges
+
+- #TBD — Issue 7.2: Implement the first end-to-end Module 1 workflow: Alert triage and investigation
+
+### Close note to paste for Issue 7.2
+
+Completed in thin-slice MVP scope.
+
+Implemented the first end-to-end Security/OSINT Module 1 workflow path from launcher initiation through run creation, case linkage, policy decisioning with approval checkpoint handling, model routing/execution participation, evidence/artifact/finding creation, and structured audit/event emissions using existing core contracts (commit `current branch head`, PR TBD).
+
+Keeping second/third Module 1 workflows and broader analyst workbench/dashboard expansion out of scope for subsequent issues.
