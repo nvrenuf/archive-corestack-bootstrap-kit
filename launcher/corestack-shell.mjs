@@ -18,7 +18,7 @@ export const TOP_LEVEL_ROUTES = [
 const ROUTE_IDS = new Set(TOP_LEVEL_ROUTES.map((route) => route.id));
 
 export function normalizeRoute(hash = "") {
-  const routeId = hash.replace(/^#\/?/, "").trim();
+  const routeId = hash.replace(/^#\/?/, "").split("?")[0].trim();
   return ROUTE_IDS.has(routeId) ? routeId : "home";
 }
 
@@ -50,7 +50,20 @@ export function renderModuleHook() {
   `;
 }
 
-function renderHomeSurface() {
+function renderRunSummary(run) {
+  return `
+    <li>
+      <strong>${run.workflowName}</strong>
+      <span> · ${run.status}</span>
+      <span> · ${run.currentStepTitle}</span>
+    </li>
+  `;
+}
+
+function renderHomeSurface(context = {}) {
+  const activeRuns = context.activeRuns ?? [];
+  const recentRuns = context.recentRuns ?? [];
+
   return `
     <section class="surface-grid" data-surface-id="home">
       <article class="shell-panel feature-panel">
@@ -61,10 +74,16 @@ function renderHomeSurface() {
       <article class="shell-panel">
         <span class="surface-meta">Active work</span>
         <h3>Runs in progress</h3>
-        <ul class="placeholder-list">
-          <li>Security/OSINT alert triage run path will appear here once launched.</li>
-          <li>Blocked and resumable work stays visible in this core-owned widget.</li>
-        </ul>
+        ${
+          activeRuns.length
+            ? `<ul class="placeholder-list">${activeRuns.map(renderRunSummary).join("")}</ul>`
+            : `
+              <ul class="placeholder-list">
+                <li>Security/OSINT alert triage run path will appear here once launched.</li>
+                <li>Blocked and resumable work stays visible in this core-owned widget.</li>
+              </ul>
+            `
+        }
       </article>
       <article class="shell-panel">
         <span class="surface-meta">Approvals</span>
@@ -77,16 +96,24 @@ function renderHomeSurface() {
       <article class="shell-panel">
         <span class="surface-meta">Recent work</span>
         <h3>Recent cases and runs</h3>
-        <ul class="placeholder-list">
-          <li>Recent Security/OSINT work will be linked here after the run contract lands.</li>
-          <li>Core owns the surface while modules contribute context.</li>
-        </ul>
+        ${
+          recentRuns.length
+            ? `<ul class="placeholder-list">${recentRuns.map(renderRunSummary).join("")}</ul>`
+            : `
+              <ul class="placeholder-list">
+                <li>Recent Security/OSINT work will be linked here after the run contract lands.</li>
+                <li>Core owns the surface while modules contribute context.</li>
+              </ul>
+            `
+        }
       </article>
     </section>
   `;
 }
 
-function renderLauncherSurface() {
+function renderLauncherSurface(context = {}) {
+  const startPath = context.startPathLabel ?? "Alert triage and investigation";
+
   return `
     <section class="surface-grid" data-surface-id="launcher">
       <article class="shell-panel feature-panel">
@@ -100,7 +127,7 @@ function renderLauncherSurface() {
         <p>The first domain module contributes workflow start paths without owning a separate desktop.</p>
         <div class="action-row">
           <a class="action-link" href="#/launcher?start=security-osint-alert-triage">Open workflow start path</a>
-          <span class="action-note">Start path stub only in this slice</span>
+          <button class="action-button" type="button" data-start-workflow="security-osint.alert-triage">${startPath}</button>
         </div>
       </article>
       <article class="shell-panel">
@@ -108,7 +135,7 @@ function renderLauncherSurface() {
         <h3>Alert triage and investigation</h3>
         <ul class="placeholder-list">
           <li>Trigger type: alert or manual intake.</li>
-          <li>First action path will create a run in the next issue.</li>
+          <li>Launch creates a persisted run on the shared core contract.</li>
           <li>Cases and evidence stay linked to core contracts.</li>
         </ul>
       </article>
@@ -124,13 +151,13 @@ function renderLauncherSurface() {
   `;
 }
 
-export function renderRouteContent(route) {
+export function renderRouteContent(route, context = {}) {
   if (route.id === "home") {
-    return renderHomeSurface();
+    return renderHomeSurface(context);
   }
 
   if (route.id === "launcher") {
-    return renderLauncherSurface();
+    return renderLauncherSurface(context);
   }
 
   return renderSurfacePlaceholder(route);

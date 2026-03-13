@@ -34,6 +34,7 @@ test("top-level routes match the documented control-plane navigation order", () 
 test("unknown routes normalize back to Home inside the same shell", () => {
   assert.equal(normalizeRoute("#/missing-surface"), "home");
   assert.equal(getRoute(normalizeRoute("#/missing-surface")).label, "Home");
+  assert.equal(normalizeRoute("#/launcher?start=security-osint-alert-triage"), "launcher");
 });
 
 test("placeholder rendering stays core-owned and does not imply a separate module shell", () => {
