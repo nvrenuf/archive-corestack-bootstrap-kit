@@ -223,9 +223,9 @@ function renderLauncherSurface(context = {}) {
   const workflowId = launcherEntry?.workflowId ?? "security-osint.alert-triage";
   const startRoute = launcherEntry?.route ?? "#/launcher?start=security-osint-alert-triage";
   const platformUtilities = [
-    { id: "n8n", label: "n8n", href: "http://localhost:5678" },
-    { id: "ollama", label: "Ollama", href: "http://localhost:11434/api/tags" },
-    { id: "db-admin", label: "DB Admin / Adminer", href: "http://localhost:8081" },
+    { id: "n8n", label: "n8n", href: "http://localhost:5678/home/workflows" },
+    { id: "ollama", label: "Ollama API", href: "http://localhost:11434/api/tags" },
+    { id: "db-admin", label: "DB Admin / Adminer", href: "http://localhost:8081/" },
   ];
 
   return `
