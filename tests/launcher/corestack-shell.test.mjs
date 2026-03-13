@@ -63,9 +63,11 @@ test("launcher exposes a Security\/OSINT workflow start path inside the shared s
   assert.match(rendered, /Alert triage and investigation/);
   assert.match(rendered, /Attach run to Security \/ OSINT alert triage/);
   assert.match(rendered, /Platform utilities/);
-  assert.match(rendered, /href="http:\/\/localhost:5678"/);
+  assert.match(rendered, /href="http:\/\/localhost:5678\/home\/workflows"/);
   assert.match(rendered, /href="http:\/\/localhost:11434\/api\/tags"/);
+  assert.match(rendered, /Ollama API/);
   assert.match(rendered, /DB Admin \/ Adminer/);
+  assert.match(rendered, /href="http:\/\/localhost:8081\/"/);
 });
 
 
