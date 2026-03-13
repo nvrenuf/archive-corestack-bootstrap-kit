@@ -1,0 +1,44 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  TOP_LEVEL_ROUTES,
+  getRoute,
+  normalizeRoute,
+  renderSurfacePlaceholder,
+} from "../../launcher/corestack-shell.mjs";
+
+test("top-level routes match the documented control-plane navigation order", () => {
+  assert.deepEqual(
+    TOP_LEVEL_ROUTES.map((route) => route.label),
+    [
+      "Home",
+      "Launcher",
+      "Runs",
+      "Approvals",
+      "Cases / Evidence",
+      "Files / Artifacts",
+      "Logs / Audit",
+      "Agents",
+      "Policies",
+      "Models",
+      "Connectors",
+      "Modules",
+      "Settings",
+      "Admin / Tenancy",
+    ],
+  );
+});
+
+test("unknown routes normalize back to Home inside the same shell", () => {
+  assert.equal(normalizeRoute("#/missing-surface"), "home");
+  assert.equal(getRoute(normalizeRoute("#/missing-surface")).label, "Home");
+});
+
+test("placeholder rendering stays core-owned and does not imply a separate module shell", () => {
+  const route = getRoute("modules");
+  const rendered = renderSurfacePlaceholder(route);
+
+  assert.match(rendered, /core-owned surface/);
+  assert.match(rendered, /No separate product shell or module-owned navigation is introduced/);
+});
