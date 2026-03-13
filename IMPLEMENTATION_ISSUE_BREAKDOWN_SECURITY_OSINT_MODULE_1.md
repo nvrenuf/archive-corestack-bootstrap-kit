@@ -493,7 +493,7 @@ Support file-like outputs such as fetched content, normalized payloads, and repo
 
 - MVP
 
-#### Issue 4.3: Implement structured audit/event logging for runs, tools, evidence, and approvals
+#### Issue 4.3: Implement structured audit/event logging for runs, tools, evidence, and approvals [x] (main: `c0fae98`, PR TBD)
 
 ##### Purpose
 
@@ -520,6 +520,10 @@ Provide reconstructable action history for the initial MVP slice.
 ##### Ownership
 
 - core-owned
+
+##### Status
+
+- completed (thin structured event model, persistence store, and run/tool/evidence hooks landed)
 
 ##### Status target
 

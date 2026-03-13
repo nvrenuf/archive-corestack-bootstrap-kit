@@ -54,6 +54,7 @@ export function createRunStore({
   key = "corestack.runs.v1",
   now = () => new Date().toISOString(),
   createId = () => crypto.randomUUID(),
+  emitEvent = () => {},
 } = {}) {
   function readRuns() {
     const raw = storage.getItem(key);
@@ -123,10 +124,24 @@ export function createRunStore({
       const runs = readRuns();
       runs.unshift(run);
       writeRuns(runs);
+      emitEvent({
+        event_type: "run.lifecycle.created",
+        timestamp,
+        correlation: {
+          run_id: run.runId,
+          workflow_id: run.workflowId,
+          case_id: run.caseId,
+          actor_id: run.actor?.actorId ?? null,
+        },
+        payload: {
+          status: run.status,
+          trigger: run.trigger,
+        },
+      });
       return clone(run);
     },
     markRunning(runId, { stepId, metadata = {} } = {}) {
-      return updateRun(runId, (run) => {
+      const updated = updateRun(runId, (run) => {
         run.status = "running";
         run.isResumable = false;
         run.resumeToken = null;
@@ -137,9 +152,23 @@ export function createRunStore({
         );
         return run;
       });
+      emitEvent({
+        event_type: "run.lifecycle.state_changed",
+        timestamp: now(),
+        correlation: {
+          run_id: updated.runId,
+          workflow_id: updated.workflowId,
+          case_id: updated.caseId,
+        },
+        payload: {
+          status: updated.status,
+          step_id: stepId ?? updated.currentStepId,
+        },
+      });
+      return updated;
     },
     blockRun(runId, { stepId, reason, resumeToken } = {}) {
-      return updateRun(runId, (run) => {
+      const updated = updateRun(runId, (run) => {
         if (!resumeToken) {
           throw new Error("blocked runs require a resumeToken");
         }
@@ -154,9 +183,25 @@ export function createRunStore({
         );
         return run;
       });
+      emitEvent({
+        event_type: "run.lifecycle.state_changed",
+        timestamp: now(),
+        correlation: {
+          run_id: updated.runId,
+          workflow_id: updated.workflowId,
+          case_id: updated.caseId,
+        },
+        payload: {
+          status: updated.status,
+          step_id: stepId ?? updated.currentStepId,
+          reason,
+          resume_token_present: Boolean(resumeToken),
+        },
+      });
+      return updated;
     },
     resumeRun(runId, { stepId, resumeToken } = {}) {
-      return updateRun(runId, (run) => {
+      const updated = updateRun(runId, (run) => {
         if (run.status !== "blocked" || run.resumeToken !== resumeToken) {
           throw new Error("run is not resumable with the provided token");
         }
@@ -171,9 +216,24 @@ export function createRunStore({
         );
         return run;
       });
+      emitEvent({
+        event_type: "run.lifecycle.state_changed",
+        timestamp: now(),
+        correlation: {
+          run_id: updated.runId,
+          workflow_id: updated.workflowId,
+          case_id: updated.caseId,
+        },
+        payload: {
+          status: updated.status,
+          step_id: stepId ?? updated.currentStepId,
+          resumed: true,
+        },
+      });
+      return updated;
     },
     completeRun(runId, { stepId, output = {} } = {}) {
-      return updateRun(runId, (run) => {
+      const updated = updateRun(runId, (run) => {
         run.status = "completed";
         run.isResumable = false;
         run.resumeToken = null;
@@ -185,9 +245,24 @@ export function createRunStore({
         );
         return run;
       });
+      emitEvent({
+        event_type: "run.lifecycle.state_changed",
+        timestamp: now(),
+        correlation: {
+          run_id: updated.runId,
+          workflow_id: updated.workflowId,
+          case_id: updated.caseId,
+        },
+        payload: {
+          status: updated.status,
+          step_id: stepId ?? updated.currentStepId,
+          output,
+        },
+      });
+      return updated;
     },
     failRun(runId, { stepId, error } = {}) {
-      return updateRun(runId, (run) => {
+      const updated = updateRun(runId, (run) => {
         run.status = "failed";
         run.isResumable = false;
         run.resumeToken = null;
@@ -199,12 +274,40 @@ export function createRunStore({
         );
         return run;
       });
+      emitEvent({
+        event_type: "run.lifecycle.state_changed",
+        timestamp: now(),
+        correlation: {
+          run_id: updated.runId,
+          workflow_id: updated.workflowId,
+          case_id: updated.caseId,
+        },
+        payload: {
+          status: updated.status,
+          step_id: stepId ?? updated.currentStepId,
+          error: error ?? null,
+        },
+      });
+      return updated;
     },
     linkCase(runId, caseId) {
-      return updateRun(runId, (run) => {
+      const updated = updateRun(runId, (run) => {
         run.caseId = caseId;
         return run;
       });
+      emitEvent({
+        event_type: "run.lifecycle.case_linked",
+        timestamp: now(),
+        correlation: {
+          run_id: updated.runId,
+          workflow_id: updated.workflowId,
+          case_id: updated.caseId,
+        },
+        payload: {
+          linked_case_id: caseId,
+        },
+      });
+      return updated;
     },
   };
 }

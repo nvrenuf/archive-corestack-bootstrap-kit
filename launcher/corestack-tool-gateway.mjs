@@ -1,4 +1,5 @@
 import { createGovernedActionRequest, validatePolicyDecision } from "./corestack-policy.mjs";
+import { createPolicyDecisionAuditCorrelation } from "./corestack-audit.mjs";
 
 const SUPPORTED_TOOLS = ["web.fetch", "web.search"];
 
@@ -95,22 +96,28 @@ function buildGovernedResource(tool, request) {
   };
 }
 
-function buildAuditEvent({ eventType, tool, request, decision, actor, now }) {
+function buildAuditEvent({ eventType, tool, request, decision = null, actor, now, payload = {} }) {
   return {
     event_type: eventType,
     timestamp: now(),
-    tool_name: tool,
-    outcome: decision.outcome,
-    decision_id: decision.decision_id,
-    request_id: decision.request_id,
-    reason_codes: decision.reasons.map((reason) => reason.code),
-    agent_id: request.agent_id,
-    actor_id: actor?.actor_id ?? null,
-    correlation_id: request.context.correlation_id,
-    module_id: request.context.module_id ?? null,
-    workflow_id: request.context.workflow_id ?? null,
-    run_id: request.context.run_id ?? null,
-    case_id: request.context.case_id ?? null,
+    correlation: {
+      correlation_id: request.context.correlation_id,
+      run_id: request.context.run_id ?? null,
+      case_id: request.context.case_id ?? null,
+      workflow_id: request.context.workflow_id ?? null,
+      actor_id: actor?.actor_id ?? null,
+      tool_name: tool,
+      request_id: decision?.request_id ?? request?.request_id ?? null,
+      decision_id: decision?.decision_id ?? null,
+      policy_decision_id: decision?.decision_id ?? null,
+    },
+    payload: {
+      tool_name: tool,
+      agent_id: request.agent_id,
+      outcome: decision?.outcome ?? null,
+      reason_codes: decision?.reasons?.map((reason) => reason.code) ?? [],
+      ...payload,
+    },
   };
 }
 
@@ -138,12 +145,19 @@ export function createToolGateway({
       const invalid = validateToolRequest(tool, request);
       if (invalid) {
         emitEvent({
-          event_type: "tool.gateway.validation_failed",
+          event_type: "tool.execution.invalid_request",
           timestamp: now(),
-          tool_name: tool,
-          request_id: request?.request_id ?? null,
-          correlation_id: request?.context?.correlation_id ?? null,
-          error: invalid.error,
+          correlation: {
+            tool_name: tool,
+            correlation_id: request?.context?.correlation_id ?? null,
+            request_id: request?.request_id ?? null,
+            run_id: request?.context?.run_id ?? null,
+            case_id: request?.context?.case_id ?? null,
+            workflow_id: request?.context?.workflow_id ?? null,
+          },
+          payload: {
+            error: invalid.error,
+          },
         });
         return invalid;
       }
@@ -173,6 +187,17 @@ export function createToolGateway({
         },
       });
 
+      emitEvent(buildAuditEvent({
+        eventType: "tool.execution.requested",
+        tool,
+        request,
+        actor,
+        now,
+        payload: {
+          purpose: request.purpose,
+        },
+      }));
+
       const rawDecision = await policyCheck(clone(governedRequest));
       const decision = validatePolicyDecision({
         decision_id: rawDecision?.decision_id ?? createDecisionId(),
@@ -194,12 +219,19 @@ export function createToolGateway({
       });
 
       emitEvent(buildAuditEvent({
-        eventType: "tool.gateway.decision",
+        eventType: "tool.execution.decisioned",
         tool,
         request,
         decision,
         actor,
         now,
+        payload: {
+          policy: createPolicyDecisionAuditCorrelation({
+            request: governedRequest,
+            decision,
+            context: governedRequest.context,
+          }),
+        },
       }));
 
       if (decision.outcome === "deny" || decision.outcome === "require_approval") {
@@ -213,14 +245,17 @@ export function createToolGateway({
       }
 
       const result = await executeTool({ tool, request: clone(request), decision: clone(decision) });
-      emitEvent({
-        event_type: "tool.gateway.executed",
-        timestamp: now(),
-        tool_name: tool,
-        request_id: decision.request_id,
-        decision_id: decision.decision_id,
-        correlation_id: request.context.correlation_id,
-      });
+      emitEvent(buildAuditEvent({
+        eventType: "tool.execution.result",
+        tool,
+        request,
+        decision,
+        actor,
+        now,
+        payload: {
+          execution_status: "executed",
+        },
+      }));
 
       return {
         ok: true,

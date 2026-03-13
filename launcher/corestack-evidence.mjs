@@ -67,6 +67,7 @@ export function createEvidenceStore({
   createEvidenceId = () => crypto.randomUUID(),
   createArtifactId = () => crypto.randomUUID(),
   createFindingId = () => crypto.randomUUID(),
+  emitEvent = () => {},
 } = {}) {
   if (!storage) {
     throw new Error("evidence store requires storage");
@@ -145,6 +146,27 @@ export function createEvidenceStore({
     }
   }
 
+
+
+  function emitMutationEvent({ objectType, action, objectId, runId = null, caseId = null, payload = {} }) {
+    emitEvent({
+      event_type: "evidence.object.mutated",
+      timestamp: now(),
+      correlation: {
+        run_id: runId,
+        case_id: caseId,
+        artifact_id: objectType === "artifact" ? objectId : null,
+        evidence_id: objectType === "evidence" ? objectId : null,
+        finding_id: objectType === "finding" ? objectId : null,
+      },
+      payload: {
+        object_type: objectType,
+        action,
+        object_id: objectId,
+        ...payload,
+      },
+    });
+  }
   return {
     listEvidenceItems() {
       return readState().evidenceItems.map(clone);
@@ -206,6 +228,18 @@ export function createEvidenceStore({
 
       state.artifacts.unshift(artifact);
       writeState(state);
+      emitMutationEvent({
+        objectType: "artifact",
+        action: "created",
+        objectId: artifact.artifactId,
+        runId: artifact.runId,
+        caseId: artifact.caseId,
+        payload: {
+          classification: artifact.classification,
+          lifecycle_state: artifact.lifecycleState,
+          storage_state: artifact.storageState,
+        },
+      });
       return clone(artifact);
     },
     createEvidenceItem({
@@ -255,6 +289,18 @@ export function createEvidenceStore({
 
       state.evidenceItems.unshift(evidenceItem);
       writeState(state);
+      emitMutationEvent({
+        objectType: "evidence",
+        action: "created",
+        objectId: evidenceItem.evidenceId,
+        runId: evidenceItem.runId,
+        caseId: evidenceItem.caseId,
+        payload: {
+          classification: evidenceItem.classification,
+          lifecycle_state: evidenceItem.lifecycleState,
+          artifact_ids: evidenceItem.artifactIds,
+        },
+      });
       return clone(evidenceItem);
     },
     createFinding({
@@ -303,6 +349,19 @@ export function createEvidenceStore({
 
       state.findings.unshift(finding);
       writeState(state);
+      emitMutationEvent({
+        objectType: "finding",
+        action: "created",
+        objectId: finding.findingId,
+        runId: finding.runId,
+        caseId: finding.caseId,
+        payload: {
+          severity: finding.severity,
+          lifecycle_state: finding.lifecycleState,
+          evidence_ids: finding.evidenceIds,
+          artifact_ids: finding.artifactIds,
+        },
+      });
       return clone(finding);
     },
   };

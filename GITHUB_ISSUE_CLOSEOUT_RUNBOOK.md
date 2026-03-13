@@ -38,9 +38,9 @@ PR #29 / commit `31c49b4` landed gateway scaffolding, but full enforcement accep
 
 ### Status note to paste for #21
 
-Status update: in progress (not complete).
+Status update: completed for MVP thin slice.
 
-Structured audit/event logging for runs, tools, evidence, and approvals is still pending as an explicit implementation step. Keep open until taxonomy, correlation, and persistence acceptance criteria are fully met.
+Structured audit/event logging scaffolding for runs, tools, evidence/artifacts/findings, and approval-compatible placeholder events landed in commit `c0fae98` (PR TBD), including correlation references and minimal persistence for reconstructable event history.
 
 ## Issues to keep open
 

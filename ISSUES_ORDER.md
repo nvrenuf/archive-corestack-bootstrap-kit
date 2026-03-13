@@ -62,8 +62,9 @@ Goal: Deliver the minimum secure Corestack control plane that can host Module 1.
 - [~] Land minimal governed tool gateway scaffolding (`31c49b4`, PR #29)
 - [x] Define the minimum evidence, artifact, and finding objects (`492f359`, PR #31)
 - [~] Implement artifact storage linkage and metadata persistence (`69e72a7`, PR #32)
+- [x] Implement structured audit/event logging for runs, tools, evidence, and approvals (`c0fae98`, PR TBD)
 
-Note: These are MVP-slice thin-slice reconciliations. Keep Milestone issues #4/#17/#18/#21 open until full acceptance criteria are satisfied.
+Note: These are MVP-slice thin-slice reconciliations. Keep Milestone issues #4/#18/#21 open until full acceptance criteria are satisfied.
 
 ### Epic: Controlled Internet Access (Tool Gateway + n8n)  #16 — https://github.com/nvrenuf/corestack-bootstrap-kit/issues/16
 7. **Define and implement Corestack control plane architecture**  #2 — https://github.com/nvrenuf/corestack-bootstrap-kit/issues/2  

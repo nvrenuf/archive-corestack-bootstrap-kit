@@ -18,11 +18,11 @@
 
 - [ ] Implement a minimal tool gateway with policy enforcement and audit hooks — scaffolding landed (`31c49b4`, PR #29), but full enforcement acceptance criteria remain open.
 - [ ] Implement artifact storage linkage and metadata persistence — thin linkage landed (`69e72a7`, PR #32), but full lifecycle and hardening acceptance criteria remain open.
-- [ ] Implement structured audit/event logging for runs, tools, evidence, and approvals — taxonomy and persistence acceptance criteria remain open.
+- [x] Implement structured audit/event logging for runs, tools, evidence, and approvals (`c0fae98`, PR TBD)
 
 ## Next recommended issue
 
-- Issue 4.3: Implement structured audit/event logging for runs, tools, evidence, and approvals.
+- Issue 5.1: Define and implement the approval object model and state machine.
 
 ## References
 
