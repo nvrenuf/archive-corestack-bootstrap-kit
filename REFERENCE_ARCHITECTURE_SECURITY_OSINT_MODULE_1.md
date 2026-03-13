@@ -2,16 +2,13 @@
 
 ## 1. Architecture intent
 
-Corestack is one desktop/control plane product. It owns the common runtime, UI, API, security controls, workflow execution, policy enforcement, evidence handling, auditability, and module lifecycle.
+Corestack is one desktop/control plane product. The control plane owns the shared runtime, major product surfaces, workflow execution, policy enforcement, approvals, evidence handling, model routing, auditability, and module lifecycle.
 
-Security/OSINT is Module 1. It is the first domain module to consume these reusable platform contracts and prove they are sufficient for real investigative work.
+Security/OSINT Module 1 is the first domain module. It consumes reusable platform contracts and validates that those contracts are sufficient for investigation-oriented work.
 
-Module 1 must not introduce one-off vertical infrastructure unless there is an explicit architectural justification. The default rule is:
+Module 1 must not introduce one-off vertical infrastructure unless there is an explicit architectural justification. If a Module 1 need cannot be served by an existing contract, the default response is to refine the corresponding core contract rather than create a private subsystem.
 
-- reusable execution, policy, approval, evidence, model, audit, and UI patterns belong in core
-- domain workflows, domain connectors, domain views, and domain-specific data extensions belong in the module
-
-The architecture goal is to let future modules reuse the same contracts without cloning infrastructure inside each module.
+If runtime packs are mentioned, they should be treated as packaging or deployment details, not as product identity. The product remains Corestack, and Security/OSINT remains a module within the single control plane.
 
 ## 2. Platform contracts exercised by Module 1
 
@@ -19,7 +16,7 @@ The architecture goal is to let future modules reuse the same contracts without 
 
 #### Purpose
 
-Provide the reusable execution model for all module workflows, including state, steps, artifacts, retries, resumability, and linkage to cases and approvals.
+Provide the reusable execution model for workflows, runs, step state, retries, resumability, and linkage to evidence, approvals, and cases.
 
 #### Required inputs/outputs
 
@@ -35,114 +32,111 @@ Inputs:
 Outputs:
 
 - run id
-- step execution records
-- run state transitions
-- attached artifacts/evidence references
+- step records
+- state transitions
+- linked artifacts/evidence references
 - approval requests
-- final outputs and status
+- final outputs and terminal state
 
-#### Ownership
+#### Who owns it
 
-- Core owns the contract, state machine, execution semantics, and storage conventions.
-- Module 1 owns workflow definitions, step intent, and domain-specific output schemas.
+- Core owns the contract, state model, step semantics, execution lifecycle, and storage conventions.
+- Module 1 owns workflow definitions and module-specific interpretation of outputs.
 
 #### What Module 1 expects from it
 
-- resumable investigation runs
-- explicit step types for ingest, enrich, analyze, review, approve, and export
-- failure and retry handling
-- run-to-case linking
-- evidence attachment at any step
+- explicit support for ingest, tool, model, review, approval, evidence, and export steps
+- resumable runs
+- blocked/failure visibility
+- run-to-case and run-to-evidence linkage
 
 ### Tool execution contract
 
 #### Purpose
 
-Provide a controlled, normalized interface for executing tools and connectors through a governed path.
+Provide a governed, normalized path for tool and connector invocation.
 
 #### Required inputs/outputs
 
 Inputs:
 
-- tool id
+- tool or connector id
 - requester identity
 - purpose
-- workflow/run context
-- typed tool input payload
+- run/workflow context
+- typed request payload
 
 Outputs:
 
 - normalized response envelope
-- timing and byte metadata
+- execution metadata
 - policy decision metadata
 - correlation id
-- normalized error shape on failure
+- normalized error shape
 
-#### Ownership
+#### Who owns it
 
-- Core owns tool invocation semantics, transport, normalization, and shared schemas.
-- Module 1 owns which tools/connectors it requests and any domain-specific interpretation of outputs.
+- Core owns schemas, transport, normalization, routing, and enforcement hooks.
+- Module 1 owns which tools or connectors it requests and how their results feed module workflows.
 
 #### What Module 1 expects from it
 
-- stable request/response schemas
-- deny-by-default execution
-- correlation between tool output and workflow/evidence objects
-- support for `web.search`, `web.fetch`, enrichment connectors, export, and intake paths
+- stable `web.fetch` and `web.search` access
+- connector-backed enrichment and export paths
+- correlation to runs, cases, and evidence objects
+- deny-by-default enforcement when policy does not permit execution
 
 ### Policy/gating contract
 
 #### Purpose
 
-Provide reusable decision points for whether a tool, connector, model, export, or workflow step is allowed.
+Provide reusable allow, deny, and approval-required decisions for governed actions.
 
 #### Required inputs/outputs
 
 Inputs:
 
-- subject action
-- requester and role
+- requested action
+- requester and role context
 - module/workflow/step context
 - target resource
-- data classification if known
-- environment/deployment policy
+- data sensitivity or classification if known
+- deployment policy scope
 
 Outputs:
 
-- allow/deny decision
+- allow or deny decision
 - reason codes
 - required limits or obligations
-- approval required flag when applicable
+- approval-required flag when applicable
 
-#### Ownership
+#### Who owns it
 
-- Core owns policy expression, evaluation, logging, and enforcement hooks.
-- Module 1 may contribute policy-relevant metadata and module defaults, but does not own the policy engine.
+- Core owns policy definition, evaluation, logging, and enforcement points.
+- Module 1 may supply metadata that policy evaluation uses, but it does not own the policy engine.
 
 #### What Module 1 expects from it
 
-- default-deny behavior
-- allowlists and limit controls for external sources
-- step-level restrictions for connectors and model providers
-- approval escalation when policy requires it
+- default-deny behavior for external collection
+- step-level restrictions for tool, connector, model, and export actions
+- predictable policy outcomes that workflows can surface to users
 
 ### Approval/HITL contract
 
 #### Purpose
 
-Provide a reusable approval object and lifecycle for actions that cannot run automatically.
+Provide reusable approval objects, state transitions, escalation paths, overrides, and review flows.
 
 #### Required inputs/outputs
 
 Inputs:
 
-- approval subject
-- requested action
-- scope
-- rationale
+- approval subject/action
 - requester
-- expiration/escalation metadata
-- linked run/case/policy references
+- rationale
+- scope
+- linked case/run/policy references
+- expiration or escalation metadata
 
 Outputs:
 
@@ -150,24 +144,23 @@ Outputs:
 - state transitions
 - approver identity
 - decision rationale
-- override/escalation record if applicable
+- escalation or override records
 
-#### Ownership
+#### Who owns it
 
-- Core owns approval objects, states, queues, and auditability.
-- Module 1 owns when its workflows ask for approval and what domain context is presented to approvers.
+- Core owns approval schema, queueing, state machine, escalation semantics, and auditability.
+- Module 1 owns when workflows request approval and what context is attached to those requests.
 
 #### What Module 1 expects from it
 
-- explicit gates for export, escalation, policy exceptions, and sensitive actions
-- human review surfaces tied to runs and cases
-- timeout and escalation handling
+- ability to gate export, escalation, scope exception, and selected dispositions
+- enough context on approval objects for investigator and reviewer decisions
 
 ### Evidence/case contract
 
 #### Purpose
 
-Provide the canonical object model for cases, evidence, findings, entities, relationships, notes, timeline events, and export packages.
+Provide canonical investigative objects and linkages for cases, evidence, artifacts, findings, notes, entities, relationships, and export metadata.
 
 #### Required inputs/outputs
 
@@ -182,27 +175,27 @@ Inputs:
 Outputs:
 
 - stable object ids
-- relationship links
+- linked object references
 - case timeline updates
-- exportable evidence manifests
-- retention/redaction metadata
+- exportable evidence references
+- lifecycle and retention metadata
 
-#### Ownership
+#### Who owns it
 
-- Core owns canonical object types, provenance rules, integrity fields, and storage contracts.
-- Module 1 owns domain-specific extensions such as security alert fields or OSINT-specific entity annotations.
+- Core owns canonical object definitions, provenance rules, linkage semantics, and lifecycle hooks.
+- Module 1 owns domain-specific fields or extensions permitted by the contract.
 
 #### What Module 1 expects from it
 
-- first-class support for case, artifact, evidence item, source, finding, entity, relationship, note, approval, and export package
-- chain-of-custody and provenance fields
-- ability to link workflow outputs to evidence and cases
+- first-class support for case, evidence item, artifact, source, finding, note, entity, relationship, and export package
+- provenance and chain-of-custody support
+- direct linkage from workflow outputs to evidence and cases
 
 ### Model routing contract
 
 #### Purpose
 
-Provide a reusable path for selecting and invoking models based on capability, policy, hosting, and risk constraints.
+Provide reusable selection and invocation of local or optional external model providers under policy control.
 
 #### Required inputs/outputs
 
@@ -212,32 +205,32 @@ Inputs:
 - module/workflow/step context
 - data sensitivity context
 - routing constraints
-- prompt/input payload
+- prompt or task payload
 
 Outputs:
 
-- selected model/provider
+- selected provider/model
 - execution result
-- routing decision metadata
-- fallback/failure metadata
+- routing metadata
+- failure or fallback metadata
 
-#### Ownership
+#### Who owns it
 
-- Core owns model registry, provider adapters, routing logic, and logging.
-- Module 1 owns capability requests and task-level quality requirements.
+- Core owns model registry, provider adapters, routing logic, and routing logs.
+- Module 1 owns capability requests and module-specific quality needs.
 
 #### What Module 1 expects from it
 
-- local/open-weight default routing
-- optional external providers under policy
-- step-level capability selection for extraction, summarization, reasoning, and report drafting
-- logged routing rationale
+- local/open-weight default path
+- optional external path under policy
+- step-level capability selection for extraction, reasoning support, and summarization
+- auditable routing decisions
 
 ### Audit/logging contract
 
 #### Purpose
 
-Provide a reusable event taxonomy and integrity-preserving record of actions across the platform.
+Provide reusable structured event capture for review, investigation reconstruction, and operations.
 
 #### Required inputs/outputs
 
@@ -252,37 +245,37 @@ Inputs:
 
 Outputs:
 
-- append-only or integrity-protected event records
+- append-only or integrity-compatible event records
 - searchable event streams
-- exportable audit bundles
+- exportable audit references or bundles
 
-#### Ownership
+#### Who owns it
 
-- Core owns the event taxonomy, sinks, integrity approach, and retention/redaction rules.
-- Module 1 adds module-specific event classes and metadata within the shared taxonomy.
+- Core owns event taxonomy, persistence model, correlation strategy, integrity approach, and retention/redaction rules.
+- Module 1 contributes module-specific event classes and metadata inside the shared taxonomy.
 
 #### What Module 1 expects from it
 
-- logging of workflow steps, policy decisions, tool calls, model routing, approvals, evidence mutations, exports, and user actions
-- linkage to cases and runs
-- forensic reconstruction support
+- workflow, tool, connector, policy, model, approval, evidence, and export events
+- searchable correlation across runs and cases
+- sufficient detail for security review and forensic reconstruction
 
 ### Module extension contract
 
 #### Purpose
 
-Provide the reusable way modules extend Corestack without copying core infrastructure.
+Provide the reusable mechanism for modules to add workflows, views, connectors, and schema extensions without duplicating core infrastructure.
 
 #### Required inputs/outputs
 
 Inputs:
 
-- module manifest/descriptor
-- workflow definitions
-- UI extension declarations
+- module manifest or descriptor
+- workflow registrations
+- view registrations
 - connector registrations
-- data/schema extensions where allowed
-- policy defaults where allowed
+- schema extensions where allowed
+- module defaults where allowed
 
 Outputs:
 
@@ -290,232 +283,200 @@ Outputs:
 - registered workflows/views/connectors
 - validated compatibility with core contracts
 
-#### Ownership
+#### Who owns it
 
-- Core owns extension points, lifecycle, compatibility checks, and security constraints.
+- Core owns lifecycle, extension points, compatibility validation, and restrictions on what modules may override.
 - Module 1 owns the content it registers through those extension points.
 
 #### What Module 1 expects from it
 
-- ability to register Security/OSINT workflows, views, connectors, and domain schema extensions
-- no requirement to ship a separate control plane or duplicate shared services
+- ability to register Security/OSINT workflows, views, and connector usage
+- no need to provide a private shell, workflow runtime, policy engine, or approval system
 
 ## 3. Runtime architecture
 
-### Major runtime components
+### Desktop/control plane UI
 
-#### Desktop/control plane UI
+The desktop/control plane UI is the primary user-facing surface for Corestack. It presents the shared product shell and hosts module-aware experiences without creating separate product shells.
 
-Primary user-facing surface for:
+### Home and launcher entry surfaces
 
-- launcher/module entry
-- alert queue or investigation start points
-- run monitoring
-- case and evidence review
-- approvals queue
-- policy visibility
-- export actions
+Home and Launcher are entry surfaces inside the control plane. They should provide starting points into module workflows, assigned work, recent runs, priority cases, and pending approvals.
 
-#### API layer
+These surfaces are core-owned but module-aware.
 
-Core API boundary for:
+### API layer
+
+The API layer provides the shared application boundary for:
 
 - UI requests
 - module registrations
-- workflow/run lifecycle
+- workflow and run lifecycle operations
 - evidence/case operations
 - approvals
-- policy query surfaces
-- export operations
+- policy and model metadata surfaces
+- export actions
 
-#### Workflow engine/orchestrator
+### Workflow engine/orchestrator
 
-Executes workflow definitions using reusable step primitives:
+The workflow engine executes workflow definitions using reusable step primitives and state transitions. It coordinates tool calls, model use, approvals, policy checks, evidence writes, and export paths.
 
-- ingest
-- tool call
-- model invocation
-- policy check
-- human review
-- approval gate
-- evidence write
-- export
+### Tool gateway
 
-#### Tool gateway
+The tool gateway is the governed path for controlled external access and normalized tool execution. It enforces schemas, allowlists, limits, and audit hooks for `web.fetch`, `web.search`, and future governed tool classes.
 
-Policy-aware execution path for external and controlled tool access. It normalizes requests, enforces limits, applies allowlists, and emits audit events.
+### Model routing layer
 
-#### Model routing layer
+The model routing layer selects a model/provider for each model step based on capability, policy, sensitivity, and hosting constraints.
 
-Selects a model/provider for each model step based on:
+### Policy engine
 
-- required capability
-- policy
-- data sensitivity
-- deployment constraints
+The policy engine evaluates whether tools, connectors, models, exports, and selected workflow transitions are allowed, denied, or approval-gated.
 
-#### Policy engine
+### Approvals service
 
-Evaluates allow/deny/approval-required decisions for:
+The approvals service stores approval objects, manages their states, handles escalation and override semantics, and returns approval outcomes to workflow execution.
 
-- tools
-- connectors
-- models
-- exports
-- selected workflow transitions
+### Evidence/case store
 
-#### Approvals service
-
-Stores approval objects, manages queues and state transitions, and returns approval decisions back into workflow execution.
-
-#### Evidence/case store
-
-Persists structured investigative objects:
+The evidence/case store persists structured investigative objects and linkages:
 
 - case
-- run linkage
 - evidence item
-- source
-- entity
-- relationship
-- finding
-- note
-- timeline event
+- artifact references
+- findings
+- notes
+- entities
+- relationships
+- timeline events
 - approval linkage
 - export package metadata
 
-#### Artifact storage
+### Artifact storage
 
-Stores payload snapshots, reports, manifests, normalized source artifacts, and other large binary/text artifacts addressed by references from the evidence/case store.
+Artifact storage stores large payloads, fetched snapshots, normalized artifacts, reports, manifests, and other file-like outputs referenced by the evidence/case store.
 
-#### Audit/event log
+### Audit/event log
 
-Stores structured event streams for workflow actions, tool calls, policy decisions, model routing, approvals, exports, and evidence mutations.
+The audit/event log stores structured events for user actions, workflow execution, tool calls, policy decisions, model routing, approval actions, evidence mutations, and exports.
 
-#### Module services
+### Module services
 
-Security/OSINT-specific services may include:
+Module services are Security/OSINT-specific service logic, including:
 
-- alert normalization/adapters
-- enrichment adapters
+- alert intake normalization
 - domain-specific workflow definitions
-- module-specific UI views
+- enrichment orchestration specific to Module 1
+- module-specific UI panels or summaries
 
-These consume core contracts and should remain thin where possible.
+These remain thin and should consume core contracts instead of replacing them.
 
-#### Sandbox/gatekeeper layer
+### Sandbox/gatekeeper layer
 
-Execution boundary around tools, connectors, and any risky module service. It enforces:
-
-- least privilege
-- restricted network paths
-- secret scoping
-- filesystem constraints
-- policy checkpoints
+The sandbox/gatekeeper layer provides isolated or policy-restricted execution boundaries around risky tool and connector actions. It protects network paths, secret use, and execution scope.
 
 ### High-level interaction model
 
-1. User works through the desktop/control plane UI.
-2. UI calls the core API layer.
-3. API starts or continues a workflow run in the orchestrator.
-4. Orchestrator evaluates policy before each controlled action.
-5. Tool calls route through the tool gateway.
-6. Model calls route through the model routing layer.
-7. Human-gated actions route through the approvals service.
-8. Structured objects persist to the evidence/case store.
-9. Large artifacts persist to artifact storage.
-10. Every significant action emits audit events.
+1. A user enters through Home, Launcher, or a linked control plane surface.
+2. The UI calls the core API.
+3. The API starts or continues a workflow run in the orchestrator.
+4. The orchestrator evaluates policy before governed actions.
+5. Tool and connector actions route through the tool gateway or governed execution path.
+6. Model steps route through the model routing layer.
+7. Approval-gated actions route through the approvals service.
+8. Structured outputs write to the evidence/case store.
+9. File-like outputs write to artifact storage.
+10. Significant actions emit audit events.
 
 ## 4. Security architecture
 
 ### Trust boundaries
 
-Core trust boundaries:
+Core trust boundaries include:
 
 - user workstation and desktop UI
-- core API/control plane runtime
-- workflow/orchestration runtime
+- core API and control plane runtime
+- workflow execution runtime
 - tool gateway and external network boundary
 - model execution boundary
-- evidence/case data stores
+- evidence/case storage
 - artifact storage
+- audit/event storage
 - external providers and external data sources
 
-Module services operate inside the control plane trust model but should still be treated as less trusted than the core security boundary because module code can evolve faster and may integrate with external systems.
+Module services operate within the control plane runtime but are not independent security authorities. They must remain subject to core-owned policy, approval, audit, and execution boundaries.
 
 ### Least-privilege assumptions
 
-- modules do not get arbitrary network access by default
-- general workflows do not directly access the internet
-- connectors only get the credentials and network access needed for their function
-- model providers only receive the data classes policy allows
-- export paths are explicit and controlled
+- modules do not receive arbitrary network access by default
+- workflows do not bypass governed tool or connector paths
+- connectors receive only the credentials and access needed for their task
+- external model providers receive only data policy allows
+- export actions are explicit and controlled
 
 ### Sandbox model
 
 The reference model is:
 
-- core orchestrator coordinates execution
-- risky tool/connectors run through isolated gateway or worker paths
-- external fetch/search is centralized behind the tool gateway
-- future higher-risk tools can be isolated more aggressively without changing module contracts
-
-Module 1 should assume the sandbox/gatekeeper layer exists even if MVP starts with a minimal implementation.
+- the orchestrator coordinates execution
+- risky tool and connector actions execute through a gatekept boundary
+- external web/OSINT collection is centralized through the tool gateway
+- stronger isolation can be added later without changing module contracts
 
 ### Tool/network controls
 
-- deny-by-default for external network access
-- hostname/domain allowlisting for web search/fetch paths
-- request size, response size, timeout, and rate limits
-- connector-specific network policy where applicable
-- no direct bypass of the tool gateway by module workflows
+- external collection is deny-by-default until explicitly allowed
+- hostname/domain allowlisting is enforced for fetch/search
+- size, timeout, and rate limits are enforced
+- module workflows may not create unmanaged direct network paths
+- connector execution remains policy-restricted
 
 ### Secret handling
 
-- secrets live in core-managed config or secret stores
-- modules reference secrets by registered connector/provider identity, not raw secret duplication
-- secrets must not be written to evidence objects, artifacts, or audit logs
-- approvals and policy metadata should refer to secret-backed connectors abstractly
+- secrets are core-managed
+- modules reference connector or provider identities rather than duplicating raw secrets
+- secrets must not be written to evidence, artifacts, logs, or approval history
+- secret access is scoped to the connector or provider execution boundary
 
 ### Policy enforcement points
 
-Policy must be evaluated at minimum:
+Policy must be enforced at minimum:
 
 - before tool execution
 - before connector execution
-- before model routing to an external provider
+- before external model routing
 - before export or external handoff
-- before workflow transitions that elevate severity or broaden scope
+- before selected scope expansions or escalation transitions
 
 ### Approval enforcement points
 
 Approval must be enforceable at minimum:
 
-- before external export/handoff
-- before policy override
-- before external provider use when policy requires it
-- before final release of an incident evidence pack
-- before selected escalations or case closures
+- before external export or handoff
+- before policy override or scope exception
+- before selected incident escalations
+- before final release of incident evidence packs
+- before selected final dispositions where policy requires review
 
 ### Audit points
 
 Audit events must exist for:
 
 - user actions
-- workflow start/step/end/failure
-- tool calls
+- workflow start, step, failure, and completion
+- tool and connector actions
 - policy decisions
 - model routing decisions
 - approval requests and decisions
-- evidence creation/mutation
+- evidence mutations
 - exports and handoffs
 
 ### Evidence integrity expectations
 
-- evidence objects carry provenance and derived-from references
-- artifacts should carry content hashes where possible
-- export manifests should include included artifact references and integrity metadata
-- audit/event streams should be integrity-protected or compatible with a later tamper-evident scheme
+- evidence-bearing objects must preserve provenance
+- artifacts should include integrity metadata where available
+- export manifests should include evidence references and integrity references for included artifacts
+- audit/event storage should be integrity-compatible with later tamper-evident improvements
 
 ## 5. Data and object flow
 
@@ -527,14 +488,14 @@ Audit events must exist for:
 
 #### Orchestration flow
 
-1. Intake path creates or updates a case and starts a workflow run.
-2. Alert payload is normalized by module logic using the workflow/run contract.
-3. Policy is checked for allowed enrichment and external lookups.
-4. Allowed tool calls execute through the tool gateway and enrichment connectors.
-5. Model routing layer is used for extraction and summary drafting.
-6. Findings, notes, entities, and source artifacts are written to evidence/case storage.
-7. Approval is requested if escalation, export, or policy-sensitive actions are needed.
-8. Final disposition updates the case and run state.
+1. Home, Launcher, or intake path creates a run and creates or attaches a case.
+2. Workflow engine normalizes the alert and extracts candidate entities.
+3. Policy is evaluated for enrichment and external lookups.
+4. Allowed tool and connector actions execute through the tool gateway/governed path.
+5. Model routing supports extraction and triage summary drafting.
+6. Findings, notes, artifacts, and timeline entries are written to evidence/case storage.
+7. Approvals service handles escalation, disposition, or export gates if required.
+8. Final case and run state is written and audit events are emitted.
 
 #### Tools used
 
@@ -545,46 +506,47 @@ Audit events must exist for:
 
 #### Model use
 
-- extraction of entities from alert context
-- synthesis of triage summary
-- optional reasoning/summarization for disposition support
+- entity extraction
+- triage summary drafting
+- optional reasoning support under policy
 
 #### Approval points
 
 - escalation
-- policy-exception lookups
-- external handoff/export
-- final disposition when policy requires review
+- connector scope exception
+- final disposition where policy requires review
+- export or handoff
 
 #### Evidence generated
 
+- alert snapshot
 - normalized alert artifact
-- source/enrichment artifacts
-- entities and relationships
-- findings and notes
-- case timeline events
+- enrichment artifacts
+- findings
+- notes
+- timeline entries
 
 #### Outputs
 
-- dispositioned or escalated case state
 - triage summary
-- linked evidence set
+- recommended disposition
+- updated case state
 
 ### Workflow 2: OSINT entity investigation
 
 #### Input
 
-- investigation request with seed entity and scope
+- manual request or pivot with seed entity and scope
 
 #### Orchestration flow
 
-1. API starts a module workflow run tied to a new or existing case.
-2. Policy checks validate the requested collection scope.
-3. Tool gateway executes allowed search/fetch requests.
-4. Enrichment connectors return normalized context.
-5. Model routing layer supports extraction, deduplication assistance, and summary drafting.
-6. Structured sources, entities, relationships, findings, and notes persist to the evidence/case store.
-7. Human review or approval occurs before final export or closure when required.
+1. User enters from Home, Launcher, or an existing case pivot.
+2. API starts a run and creates or attaches a case.
+3. Policy validates requested search and collection scope.
+4. Allowed search/fetch/enrichment actions run through governed execution paths.
+5. Model routing supports extraction, clustering assistance, relationship suggestion, and summary drafting.
+6. Structured sources, entities, relationships, findings, notes, and timeline entries are persisted.
+7. Approvals service handles broadened scope, export, or closure gates where required.
 
 #### Tools used
 
@@ -594,49 +556,52 @@ Audit events must exist for:
 
 #### Model use
 
-- extract related entities and claims
-- summarize evidence-backed observations
-- propose structured relationship candidates
+- source and entity extraction
+- relationship suggestion
+- evidence-backed summary drafting
 
 #### Approval points
 
 - broadened search scope
-- high-risk connector use if later added
-- final export or closure
+- later-added higher-risk collection categories
+- export or closure where policy requires it
 
 #### Evidence generated
 
 - source records
-- fetched artifacts/snapshots
-- entity and relationship objects
-- findings with supporting links
-- investigation notes and timeline events
+- fetched artifacts
+- entity records
+- relationship records
+- findings
+- notes
+- timeline entries
 
 #### Outputs
 
 - entity profile
-- findings set
-- exportable investigation summary
+- structured findings
+- exportable investigation summary where requested
 
 ### Workflow 3: Incident evidence pack generation
 
 #### Input
 
-- existing case and selected reporting/export scope
+- existing case, export scope, and output target
 
 #### Orchestration flow
 
-1. Workflow loads case, findings, artifacts, approvals, and timeline from the evidence/case store.
-2. Packaging logic reads referenced artifacts from artifact storage.
-3. Model routing layer may draft chronology and report sections.
-4. Packaging step builds the export manifest and integrity references.
-5. Approval gate reviews the report and export action.
-6. Approved bundle is written to artifact storage and linked back to the case.
-7. Audit/event log records release and handoff metadata.
+1. User starts from a case, approval context, or completed run.
+2. Workflow loads case, findings, artifacts, evidence, approvals, and timeline from the evidence/case store.
+3. Artifact storage provides referenced payloads and report inputs.
+4. Model routing supports chronology summarization and report drafting.
+5. Packaging logic assembles the manifest and output artifacts.
+6. Approvals service handles release, redaction, and handoff gating.
+7. Approved outputs are written to artifact storage and linked back to the case.
+8. Audit events record release and handoff results.
 
 #### Tools used
 
-- artifact storage read/write path
+- artifact storage read/write
 - report/export tool
 - optional external handoff connector
 
@@ -648,69 +613,69 @@ Audit events must exist for:
 
 #### Approval points
 
-- redactions where required
-- final package release
-- external handoff/export
+- final report approval
+- redaction approval where required
+- export or handoff approval
 
 #### Evidence generated
 
-- export manifest
+- manifest
 - report artifacts
-- approval record
-- export receipt and timeline events
+- approval linkage
+- export receipt or handoff record
 
 #### Outputs
 
-- incident evidence pack
+- evidence pack manifest
 - analyst report
 - management summary
+- export bundle reference
 
 ## 6. Module boundary rules
 
 ### What stays in core
 
 - desktop/control plane shell
-- core API and lifecycle management
+- Home and Launcher entry surfaces
+- API layer
 - workflow engine and run state model
 - tool execution contract and tool gateway
 - policy engine
-- approval object model and service
+- approvals service and approval contract
 - model registry and routing
 - canonical evidence/case objects
 - artifact storage contract
-- audit/event taxonomy and sinks
+- audit/event taxonomy and storage
 - module lifecycle and extension contract
 
 ### What belongs in Security/OSINT Module 1
 
 - Security/OSINT workflow definitions
-- domain-specific intake normalization
-- domain-specific enrichment mappings
-- domain-specific UI views and terminology
-- Security/OSINT schema extensions that sit on top of core evidence/case objects
-- module-specific report templates or export views
+- alert normalization logic specific to the module
+- domain-specific enrichment sequencing
+- module-specific views, summaries, and domain object facets
+- module-specific usage of core connectors and tools
 
 ### What can be extended by future modules
 
-- new workflows on the shared workflow contract
-- new domain connectors using the shared tool/connector contract
-- new UI views registered through module extension points
-- schema extensions allowed by the evidence/case extension rules
-- new policy defaults expressed through the core policy engine
+- additional workflows registered through the workflow contract
+- additional module-aware views through extension points
+- additional connector usage patterns through governed contracts
+- additional schema extensions where allowed by core object rules
 
 ### What cannot be duplicated inside modules
 
-- separate approval systems
-- separate policy engines
 - separate workflow runtimes
-- separate audit systems
+- separate policy engines
+- separate approval systems
 - separate evidence/case stores for core investigative objects
-- direct unmanaged internet access paths
-- vendor-specific model routing hardcoded as a private module subsystem
+- separate audit systems
+- unmanaged internet access paths
+- vendor-specific model routing subsystems that bypass core routing
 
 ## 7. Deployment architecture
 
-### Deployment principles
+### Alignment principles
 
 - self-hosted-first
 - open-weight-first
@@ -722,6 +687,7 @@ Audit events must exist for:
 Minimum reference shape:
 
 - desktop/control plane UI
+- home and launcher entry surfaces within the shell
 - core API layer
 - workflow engine/orchestrator
 - tool gateway
@@ -731,94 +697,94 @@ Minimum reference shape:
 - artifact storage
 - audit/event log
 - local model runtime
-- Security/OSINT Module 1 services
+- Module 1 services
 
-In a compact deployment, several of these may be packaged together as fewer processes, but the architecture should preserve the logical boundaries.
+These components may be colocated in practice, but their logical roles and trust boundaries should remain distinct.
 
 ### Optional external-provider path
 
-Optional providers may exist for:
+Optional external paths may exist for:
 
 - external search providers behind `web.search`
-- external model providers through the model routing layer
-- external ticket/case handoff targets
+- external model providers via the model routing layer
+- external export or ticket/case handoff targets
 
-These paths are adapters behind core contracts, not direct module dependencies.
+These are optional adapters behind core-owned contracts and not part of product identity.
 
 ### Where policy can restrict external use
 
-Policy should be able to enforce:
+Policy must be able to:
 
-- local-only model execution for selected workflows or data classes
-- approved-domain-only external search/fetch
-- export-denied or approval-required handoff
-- connector-specific restrictions by deployment profile
-- complete external disablement for hardened or air-gapped deployments
+- force local-only model execution
+- restrict or disable external search/fetch
+- require approval for export or handoff
+- restrict connectors by deployment profile
+- fully disable external providers for hardened or air-gapped deployments
 
 ## 8. MVP architecture slice
 
 ### Minimum architecture needed for Module 1 MVP
 
-Module 1 MVP needs:
+Module 1 MVP requires:
 
-- one desktop/control plane experience with module entry, runs, cases, approvals, and evidence views
-- one core API surface for run, case, evidence, approval, and export operations
-- one workflow engine with step support for ingest, tool, model, review, approval, and export
+- one desktop/control plane shell
+- Home and Launcher entry surfaces
+- one core API layer
+- one workflow engine with the required step types for Module 1
 - one tool gateway supporting `web.fetch` and `web.search`
-- one policy engine enforcing deny-by-default, allowlists, and basic approval-required decisions
-- one approval service with pending/approved/denied lifecycle
+- one policy engine with allow/deny and approval-required decisions
+- one approvals service with core state transitions
 - one evidence/case store with minimum canonical objects
-- one artifact storage path for snapshots and reports
-- one audit/event stream for workflows, tools, policies, approvals, and evidence mutations
-- one local model runtime path as default
-- thin Security/OSINT module services for alert intake, investigation workflows, and evidence pack generation
+- one artifact storage path
+- one audit/event stream for critical actions
+- one local/open-weight model path
+- thin Module 1 services for alert triage, OSINT investigation, and evidence pack generation
 
 ### Deferred from MVP
 
 - full no-code workflow builder
-- broad connector catalog
-- advanced graph analytics
-- sophisticated sandbox isolation for every component class
-- enterprise multi-tenant boundaries
-- advanced retention automation and legal hold workflows
-- extensive executive dashboards
-- broad remediation or response automation
+- broad connector ecosystem
+- advanced graph visualization
+- stronger isolation for every component type
+- enterprise tenancy implementation
+- advanced backup/restore automation
+- extensive dashboards
+- autonomous remediation
 
 ## 9. Open risks and design tensions
 
 ### Local models vs capability
 
-Open-weight local models align with the product direction, but some investigative tasks may pressure the system toward stronger external models. The routing and policy layers must keep this as a controlled exception, not the default architecture.
+Open-weight local models match product direction, but some investigative tasks may pressure the architecture toward stronger external providers. The routing and policy model must keep this controlled and auditable.
 
 ### Sandbox overhead
 
-Strong isolation improves security but can increase runtime complexity and operator burden. The architecture should preserve isolation boundaries logically even if MVP uses lighter-weight deployment choices first.
+Stronger isolation improves security but increases operational complexity. The architecture should preserve the boundary now even if MVP uses lighter-weight deployment choices.
 
 ### Policy complexity
 
-A powerful policy engine can become difficult to reason about. The design should prefer a small set of explicit enforcement points and stable reason codes over early policy sprawl.
+A rich policy engine can become difficult to reason about. The design should prefer a small set of clear enforcement points and stable reason codes over early policy sprawl.
 
 ### Evidence retention burden
 
-Evidence-rich workflows create storage, retention, and privacy pressure. The reference architecture must preserve provenance and integrity while keeping retention/redaction rules as first-class core concerns.
+Evidence-rich workflows increase storage and retention pressure. The architecture must keep provenance and audit value without treating indefinite retention as the default.
 
 ### Module extensibility vs strict control
 
-Future modules need enough extension room to be useful, but the platform cannot permit private workflow runtimes, policy engines, or evidence systems inside modules. Core must remain the only place where those contracts are implemented.
+Modules must have enough room to be useful, but core must remain the sole owner of workflow, policy, approval, evidence, audit, and shell behavior. That tension will need active boundary discipline.
 
 ## Alignment
 
-This document is intended to concretize and align:
+This document is intended to align:
 
 - [ISSUES_ORDER.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/ISSUES_ORDER.md)
+- [docs/roadmap/CORESTACK_ISSUE_DRAFTS.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/docs/roadmap/CORESTACK_ISSUE_DRAFTS.md)
 - [SECURITY_OSINT_MODULE_1.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/SECURITY_OSINT_MODULE_1.md)
 
-It should guide the architecture work behind:
+It should guide the architecture work for:
 
-- Corestack control plane architecture
+- the single Corestack desktop/control plane
+- Module 1 runtime and contract validation
 - workflow engine and orchestration
-- model management and routing
-- approvals and HITL
-- evidence/case object model
-- sandbox/gatekeeper model
-- security audit, forensics, and evidence trails
+- policy, approval, and audit architecture
+- evidence/case and artifact architecture

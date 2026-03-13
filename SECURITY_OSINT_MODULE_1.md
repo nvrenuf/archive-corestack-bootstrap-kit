@@ -17,6 +17,7 @@ It exists to validate the first reusable platform abstractions for:
 - exportable investigation outputs
 
 This module should drive architecture, UI, workflow semantics, evidence objects, and issue sequencing for the rest of the platform.
+If a downstream runtime pack is used later, it is an implementation packaging detail and not the product identity for Module 1.
 
 ### Who it is for
 
@@ -575,6 +576,7 @@ Provide the reusable mechanism for modules to add workflows, views, connectors, 
 
 Module 1 requires:
 
+- home and launcher entry points
 - launcher/module entry
 - runs
 - approvals
