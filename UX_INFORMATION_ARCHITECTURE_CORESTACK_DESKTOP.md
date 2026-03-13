@@ -2,18 +2,20 @@
 
 ## 1. UX intent
 
-Corestack is one desktop/control plane. The UX should present one coherent operator workspace for modules, workflows, evidence, approvals, policy, and administration.
+Corestack is one desktop/control plane. The UX must present one coherent operator workspace for workflows, cases, evidence, approvals, policies, connectors, models, modules, and administration.
 
 The UX must feel like a professional operator workspace:
 
-- task-oriented rather than app-switching-oriented
-- evidence-aware rather than chat-centric
-- stateful and auditable rather than ephemeral
-- optimized for review, escalation, and reconstruction
+- task-oriented instead of shell-switching-oriented
+- evidence-aware instead of chat-centric
+- stateful instead of ephemeral
+- reviewable and auditable instead of opaque
 
-Modules extend the experience without fragmenting the product. A module may add workflows, views, object facets, and domain-specific panels, but it should not introduce a separate shell, separate navigation philosophy, or separate control surfaces for core platform concerns.
+Modules extend the experience without fragmenting the product. Module-aware content may add workflows, panels, views, and object facets, but modules must not create separate top-level shells or replace core-owned product surfaces.
 
-Security/OSINT Module 1 is the first real vertical surface. It should shape the first investigator-facing experience in Corestack, but it should do so by consuming shared UI patterns for runs, approvals, cases, evidence, artifacts, logs, policies, and connectors.
+Security/OSINT Module 1 is the first real vertical surface. It should shape the first analyst-facing experience while validating shared control-plane UX patterns for runs, cases, evidence, approvals, logs, policies, connectors, and exports.
+
+If packs are mentioned, they should be treated as implementation or runtime details rather than product identity. The operator-facing experience remains Corestack.
 
 ## 2. Primary personas
 
@@ -22,112 +24,106 @@ Security/OSINT Module 1 is the first real vertical surface. It should shape the 
 #### Primary goals
 
 - triage alerts quickly
-- investigate suspicious activity
-- capture evidence and findings
-- escalate only when warranted
+- determine whether escalation is needed
+- create defensible findings and attach evidence
 
 #### Top actions
 
-- open alert-driven runs
-- review summaries and linked entities
-- attach evidence to cases
-- request approval or escalate
+- open alert-driven investigations
+- review run output and enrichment
+- inspect and attach evidence
+- disposition or escalate cases
 
 #### What they need visible
 
-- current queue or work entry points
-- active runs and case status
-- evidence and findings linked to a case
-- approvals blocking progress
-- policy denials or connector failures
+- assigned or priority work
+- current run and case status
+- evidence-linked findings
+- blockers, denials, and pending approvals
 
 #### What they should not need to touch often
 
-- policy administration
 - model configuration
 - connector secrets
-- tenancy/admin controls
+- policy authoring
+- tenancy or deep admin settings
 
 ### IR lead
 
 #### Primary goals
 
-- oversee incident investigations
-- review evidence quality
+- oversee high-severity investigations
+- maintain review discipline and evidence quality
 - approve escalations and exports
-- maintain investigation discipline and auditability
 
 #### Top actions
 
-- review high-severity cases
-- inspect timelines, findings, and approval requests
-- approve or deny evidence packs and escalations
-- assign or reassign work
+- review cases and timelines
+- inspect findings and evidence coverage
+- approve or deny gated actions
+- direct and reassign work
 
 #### What they need visible
 
-- case severity, status, and owners
-- timeline of actions and evidence growth
+- case severity and status
 - pending approvals
 - export readiness and unresolved gaps
+- audit trail for high-risk actions
 
 #### What they should not need to touch often
 
 - low-level connector configuration
 - routine model selection
-- module installation lifecycle
+- module lifecycle controls
 
 ### Threat hunter
 
 #### Primary goals
 
 - pursue hypotheses
-- pivot through entities and relationships
-- compare related observations across runs
-- turn weak signals into structured findings
+- correlate signals across entities and prior investigations
+- turn weak indicators into supported findings
 
 #### Top actions
 
-- start entity investigations
-- search across cases, evidence, and artifacts
-- launch enrichment paths
-- save findings and notes
+- initiate entity investigations
+- pivot across entities, evidence, and artifacts
+- save notes, hypotheses, and findings
 
 #### What they need visible
 
-- entities, relationships, and related runs
-- linked evidence and source provenance
-- search and pivot paths
-- module-specific investigation tools
+- related entities and relationships
+- source provenance
+- prior runs and linked cases
+- safe enrichment and collection paths
 
 #### What they should not need to touch often
 
 - approval administration
 - export configuration
-- system health and infra settings
+- deep system health settings
 
 ### OSINT investigator
 
 #### Primary goals
 
-- investigate entities and infrastructure using controlled external sources
-- preserve source provenance
-- separate evidence-backed observations from hypotheses
-- produce reviewable summaries
+- investigate external entities and infrastructure using governed sources
+- preserve provenance
+- separate supported observations from unresolved hypotheses
 
 #### Top actions
 
-- start manual investigations
-- run search/fetch and enrichment paths
-- collect and attach source artifacts
-- draft findings and notes
+- launch manual investigations
+- collect source material
+- review artifacts and extracted entities
+- produce findings and exportable summaries
 
 #### What they need visible
 
-- source records and fetch provenance
-- artifacts and extracted entities
-- search scope and policy restrictions
-- findings and evidence support
+- search scope and policy constraints
+- source records and artifact provenance
+- evidence/finding linkage
+- export readiness
 
 #### What they should not need to touch often
 
@@ -139,62 +135,61 @@ Security/OSINT Module 1 is the first real vertical surface. It should shape the 
 
 #### Primary goals
 
-- monitor investigation throughput and status
-- review major incidents and exported outputs
-- understand approvals, exceptions, and audit posture
+- understand case status and investigation quality
+- review high-risk approvals and exceptions
+- consume exports and summaries without re-running technical workflows
 
 #### Top actions
 
 - review case summaries
-- inspect major approvals and overrides
-- open exported evidence packs
-- monitor module-level usage and blockers
+- inspect approvals and overrides
+- review evidence pack outputs
 
 #### What they need visible
 
-- high-level case and run status
-- pending/high-risk approvals
-- exports and audit summaries
-- major policy exception activity
+- concise case and run status
+- high-risk approvals
+- exports and review outcomes
+- policy exception activity
 
 #### What they should not need to touch often
 
 - detailed evidence editing
-- connector setup
-- workflow step-by-step operation
+- connector configuration
+- workflow step-level operation
 
 ### Platform admin
 
 #### Primary goals
 
 - keep the control plane healthy
-- manage modules, connectors, policies, and model availability
-- support secure self-hosted operations
+- manage models, connectors, policies, modules, and operational settings
+- support secure self-hosted operation
 
 #### Top actions
 
-- configure connectors and secrets
-- manage policies and model/provider availability
-- review logs, audits, and system health
-- enable/disable modules
+- manage connectors and secrets
+- manage policies and model availability
+- inspect system health, logs, and audit streams
+- enable or disable modules
 
 #### What they need visible
 
-- module lifecycle status
-- connector state and secret bindings
-- policy status and violations
-- model inventory and routing defaults
-- health, logs, and audit streams
+- system health and warnings
+- connector status
+- model availability and routing defaults
+- policy status and enforcement impact
+- module lifecycle state
 
 #### What they should not need to touch often
 
-- day-to-day case handling
-- routine investigation notes
-- low-risk analyst workflow decisions
+- day-to-day investigation notes
+- low-risk case handling
+- routine analyst decisions
 
 ## 3. Top-level navigation
 
-Recommended top-level order:
+Recommended order:
 
 1. Home
 2. Launcher
@@ -211,46 +206,47 @@ Recommended top-level order:
 13. Settings
 14. Admin / Tenancy
 
-This order reflects operator frequency first, then control plane governance, then administration.
+The order prioritizes operator work first, then governance surfaces, then administration.
 
 ### Home
 
 #### Purpose
 
-Provide the default workspace overview with active work, blocked work, recent investigations, and system-level status relevant to the signed-in user.
+Provide a role-aware overview of active work, blocked work, recent investigations, approvals, and system signals relevant to the user.
 
 #### Primary users
 
 - SOC analyst
 - IR lead
 - threat hunter
+- OSINT investigator
 - security manager
 - platform admin
 
 #### Core objects shown there
 
-- assigned runs
-- priority cases
-- pending approvals
-- recent exports
-- recent audit alerts or system warnings
+- runs
+- cases
+- approvals
+- exports
+- major warnings or blockers
 
 #### Key actions
 
-- resume a run
+- resume work
 - open a case
-- review a pending approval
-- launch a module workflow
+- open a pending approval
+- jump into a workflow start path
 
 #### Core-wide or module-aware
 
-- Core-wide, with module-aware widgets
+- Core-wide with module-aware widgets
 
 ### Launcher
 
 #### Purpose
 
-Provide a stable starting point for entering modules and commonly used workflows without becoming a generic app catalog.
+Provide a stable entry surface for available modules and workflow start paths without becoming a generic app catalog.
 
 #### Primary users
 
@@ -261,54 +257,54 @@ Provide a stable starting point for entering modules and commonly used workflows
 
 #### Core objects shown there
 
-- installed modules
-- featured workflows
-- saved investigation entry points
+- modules
+- workflow entry points
+- saved or recent launch paths
 
 #### Key actions
 
 - launch Security/OSINT workflows
-- open recent module spaces
-- discover available module capabilities
+- inspect module capabilities
+- jump to recent module-aware work
 
 #### Core-wide or module-aware
 
-- Core-wide shell with module-aware content
+- Core-owned shell with module-aware content
 
 ### Agents
 
 #### Purpose
 
-Show reusable agent or assistant definitions, their allowed capabilities, and their operational boundaries.
+Expose reusable agent or assistant definitions, capability boundaries, and linked policy/model context.
 
 #### Primary users
 
 - platform admin
 - IR lead
-- advanced analysts
+- advanced operators
 
 #### Core objects shown there
 
-- agent definitions
+- agents
 - allowed tools
 - model defaults
 - policy associations
 
 #### Key actions
 
-- inspect an agent
-- enable/disable an agent
-- review what an agent can access
+- inspect
+- enable/disable
+- review capability boundaries
 
 #### Core-wide or module-aware
 
-- Core-wide, with module-specific agent assignments
+- Core-wide with module-aware usage context
 
 ### Runs
 
 #### Purpose
 
-Provide the execution-oriented view of in-progress, failed, queued, and completed workflow runs.
+Provide the execution-centric view of in-progress, blocked, failed, queued, and completed workflow runs.
 
 #### Primary users
 
@@ -329,9 +325,9 @@ Provide the execution-oriented view of in-progress, failed, queued, and complete
 #### Key actions
 
 - open run details
-- retry or resume run
+- resume or retry
 - inspect step outputs
-- jump to linked case/evidence
+- pivot to linked case or evidence
 
 #### Core-wide or module-aware
 
@@ -341,7 +337,7 @@ Provide the execution-oriented view of in-progress, failed, queued, and complete
 
 #### Purpose
 
-Provide the queue and detail surfaces for approvals, denials, escalations, overrides, and requested changes.
+Provide the queue and detail views for all approval-gated actions, denials, requested changes, escalations, expirations, and overrides.
 
 #### Primary users
 
@@ -351,10 +347,10 @@ Provide the queue and detail surfaces for approvals, denials, escalations, overr
 
 #### Core objects shown there
 
-- approval requests
+- approvals
 - approval state
-- requester/approver
-- linked case/run/policy
+- requester and approver
+- linked case/run/policy/export references
 
 #### Key actions
 
@@ -362,17 +358,17 @@ Provide the queue and detail surfaces for approvals, denials, escalations, overr
 - deny
 - request changes
 - escalate
-- inspect audit trail
+- inspect approval history
 
 #### Core-wide or module-aware
 
-- Core-wide, with module-specific context panels
+- Core-wide with module-specific context panes
 
 ### Cases / Evidence
 
 #### Purpose
 
-Provide the primary investigative workspace for cases, evidence, findings, entities, relationships, notes, and timelines.
+Provide the primary investigative workspace for cases, evidence, findings, notes, entities, relationships, and timelines.
 
 #### Primary users
 
@@ -387,28 +383,28 @@ Provide the primary investigative workspace for cases, evidence, findings, entit
 - cases
 - evidence items
 - findings
+- notes
 - entities
 - relationships
-- notes
 - timeline events
 
 #### Key actions
 
-- open and review a case
-- attach or detach evidence
-- create or edit findings
-- inspect provenance
+- open a case
+- inspect evidence and provenance
+- create or revise findings
+- review timeline
 - initiate export
 
 #### Core-wide or module-aware
 
-- Core-wide surface with strong module-aware layouts
+- Core-wide with strong module-aware layouts and panels
 
 ### Files / Artifacts
 
 #### Purpose
 
-Provide direct access to stored artifacts, exports, snapshots, manifests, and report files.
+Provide direct access to stored artifacts, snapshots, manifests, reports, and export bundles.
 
 #### Primary users
 
@@ -420,27 +416,27 @@ Provide direct access to stored artifacts, exports, snapshots, manifests, and re
 #### Core objects shown there
 
 - artifacts
-- export bundles
+- reports
 - manifests
 - source snapshots
-- generated reports
+- export bundles
 
 #### Key actions
 
-- preview artifact
-- inspect hash/provenance
-- link artifact to case/evidence
+- preview
+- inspect provenance and integrity metadata
+- link to cases or evidence
 - export or download where allowed
 
 #### Core-wide or module-aware
 
-- Core-wide, with module-derived artifact types
+- Core-wide with module-derived artifact types
 
 ### Logs / Audit
 
 #### Purpose
 
-Expose operational and forensic records for workflows, tools, models, policies, approvals, and user actions.
+Expose operational and forensic records for workflows, tools, policies, models, approvals, evidence changes, and user actions.
 
 #### Primary users
 
@@ -453,13 +449,14 @@ Expose operational and forensic records for workflows, tools, models, policies, 
 - audit events
 - workflow events
 - tool/policy/model events
-- user action logs
+- user action events
 
 #### Key actions
 
-- search by correlation id or object id
+- search by correlation id
+- filter by object id
 - reconstruct an action path
-- inspect denials, failures, and overrides
+- inspect failures, denials, and overrides
 
 #### Core-wide or module-aware
 
@@ -469,7 +466,7 @@ Expose operational and forensic records for workflows, tools, models, policies, 
 
 #### Purpose
 
-Show and manage execution rules governing tools, models, connectors, exports, and selected workflow actions.
+Expose and manage execution rules for tools, connectors, models, exports, and selected workflow actions.
 
 #### Primary users
 
@@ -481,24 +478,25 @@ Show and manage execution rules governing tools, models, connectors, exports, an
 - policies
 - policy scopes
 - allow/deny rules
-- exception state
+- approval-required rules
+- recent denials or exception context
 
 #### Key actions
 
-- view policy
-- edit policy
-- inspect effect on modules/connectors/models
-- review recent denials
+- inspect
+- edit
+- review impact on workflows or modules
+- inspect recent decision outcomes
 
 #### Core-wide or module-aware
 
-- Core-wide with module-level scoping
+- Core-wide with module-level scope views
 
 ### Models
 
 #### Purpose
 
-Expose available models, providers, routing defaults, and usage constraints.
+Expose local and external model entries, capabilities, routing defaults, and policy constraints.
 
 #### Primary users
 
@@ -507,26 +505,27 @@ Expose available models, providers, routing defaults, and usage constraints.
 
 #### Core objects shown there
 
-- model entries
-- provider bindings
-- capability classes
+- models
+- providers
+- capability tags
 - routing defaults
+- availability status
 
 #### Key actions
 
-- inspect availability
-- enable/disable model path
-- view routing constraints
+- inspect
+- enable/disable
+- review routing role and restrictions
 
 #### Core-wide or module-aware
 
-- Core-wide with module-aware usage views
+- Core-wide with module-aware usage context
 
 ### Connectors
 
 #### Purpose
 
-Manage external and internal data connectors, enrichment sources, and export targets.
+Manage ingestion, enrichment, and export connectors together with their status, restrictions, and secret bindings.
 
 #### Primary users
 
@@ -535,17 +534,18 @@ Manage external and internal data connectors, enrichment sources, and export tar
 
 #### Core objects shown there
 
-- connector registrations
+- connectors
 - status
-- secret bindings
 - policy scope
+- secret binding references
+- module usage context
 
 #### Key actions
 
-- configure connector
-- enable/disable connector
-- test connectivity
-- inspect policy restrictions
+- configure
+- enable/disable
+- inspect restrictions
+- test
 
 #### Core-wide or module-aware
 
@@ -555,26 +555,26 @@ Manage external and internal data connectors, enrichment sources, and export tar
 
 #### Purpose
 
-Show installed modules, their workflows, extension points, health, and lifecycle state.
+Expose installed modules, contributed workflows, views, connectors, and lifecycle state.
 
 #### Primary users
 
 - platform admin
 - security manager
-- advanced analysts
+- advanced operators
 
 #### Core objects shown there
 
 - modules
-- module status
+- lifecycle state
 - contributed workflows
 - contributed views/connectors
 
 #### Key actions
 
-- inspect module
-- enable/disable module
-- review what the module extends
+- inspect
+- enable/disable
+- review contributed content
 
 #### Core-wide or module-aware
 
@@ -593,13 +593,13 @@ Provide user and workspace preferences that are not deep platform administration
 #### Core objects shown there
 
 - profile settings
-- notification settings
+- notifications
 - workspace preferences
 
 #### Key actions
 
 - adjust preferences
-- manage personal defaults
+- update user-level defaults
 
 #### Core-wide or module-aware
 
@@ -609,7 +609,7 @@ Provide user and workspace preferences that are not deep platform administration
 
 #### Purpose
 
-Provide hardened administration for deployment-level configuration, health, access boundaries, and future tenancy controls.
+Provide hardened administration for deployment-level settings, system health, access boundaries, retention, and future tenancy controls.
 
 #### Primary users
 
@@ -618,16 +618,16 @@ Provide hardened administration for deployment-level configuration, health, acce
 #### Core objects shown there
 
 - system health
-- access controls
 - retention settings
+- access or boundary settings
 - storage status
-- tenancy boundaries if later enabled
+- tenancy controls if later implemented
 
 #### Key actions
 
-- review health
-- configure retention/admin settings
-- inspect critical system warnings
+- inspect health
+- update admin settings
+- inspect warnings
 
 #### Core-wide or module-aware
 
@@ -639,32 +639,32 @@ Provide hardened administration for deployment-level configuration, health, acce
 
 #### What it is
 
-A reusable assistant or execution profile with defined capabilities, tools, policies, and model defaults.
+A reusable assistant or execution profile with defined capabilities, tools, models, and policies.
 
 #### Where users see it
 
 - Agents
-- Runs
-- module workflow launch surfaces
+- workflow launch context
+- run details
 
 #### What actions users can take on it
 
 - inspect
 - enable/disable
-- review permissions and defaults
+- review capability boundaries
 
 #### What relationships matter most
 
-- linked workflows
-- linked tools
-- linked models
-- linked policies
+- workflows
+- tools
+- models
+- policies
 
 ### Run
 
 #### What it is
 
-A specific execution instance of a workflow.
+A concrete execution instance of a workflow.
 
 #### Where users see it
 
@@ -679,7 +679,7 @@ A specific execution instance of a workflow.
 - resume
 - retry
 - inspect steps
-- jump to linked objects
+- pivot to linked objects
 
 #### What relationships matter most
 
@@ -693,7 +693,7 @@ A specific execution instance of a workflow.
 
 #### What it is
 
-A reusable procedure definition that drives a run.
+A reusable procedure definition that drives runs.
 
 #### Where users see it
 
@@ -704,21 +704,21 @@ A reusable procedure definition that drives a run.
 #### What actions users can take on it
 
 - launch
-- inspect requirements
-- view recent run history
+- inspect prerequisites
+- review recent run history
 
 #### What relationships matter most
 
 - module
 - agent
 - runs
-- required approvals or policies
+- policies
 
 ### Approval
 
 #### What it is
 
-A human decision object for gated actions.
+A human decision object for a gated action.
 
 #### Where users see it
 
@@ -747,7 +747,7 @@ A human decision object for gated actions.
 
 #### What it is
 
-The primary investigation container for a unit of work, incident, or investigation.
+The primary investigative container for a unit of work, incident, or investigation.
 
 #### Where users see it
 
@@ -762,7 +762,7 @@ The primary investigation container for a unit of work, incident, or investigati
 - update status
 - assign
 - review timeline
-- export
+- initiate export
 
 #### What relationships matter most
 
@@ -776,7 +776,7 @@ The primary investigation container for a unit of work, incident, or investigati
 
 #### What it is
 
-A structured evidentiary object linked to a case, source, artifact, or finding.
+A structured evidentiary object linked to a case and supported by provenance.
 
 #### Where users see it
 
@@ -793,9 +793,9 @@ A structured evidentiary object linked to a case, source, artifact, or finding.
 
 #### What relationships matter most
 
+- case
 - source
 - artifact
-- case
 - finding
 - derived-from chain
 
@@ -815,7 +815,7 @@ A stored file-like or payload snapshot object such as a fetched page, normalized
 
 - preview
 - inspect integrity metadata
-- link to case/evidence
+- link to case or evidence
 - export where allowed
 
 #### What relationships matter most
@@ -829,7 +829,7 @@ A stored file-like or payload snapshot object such as a fetched page, normalized
 
 #### What it is
 
-A human- or system-authored conclusion or observation that should be supported by evidence.
+A supported observation or conclusion produced by a workflow or analyst.
 
 #### Where users see it
 
@@ -842,7 +842,7 @@ A human- or system-authored conclusion or observation that should be supported b
 - create
 - edit
 - review support
-- mark status or confidence
+- mark state or confidence
 
 #### What relationships matter most
 
@@ -855,27 +855,27 @@ A human- or system-authored conclusion or observation that should be supported b
 
 #### What it is
 
-A reusable rule set controlling access, routing, approvals, and limits.
+A reusable rule set controlling access, routing, limits, and approval requirements.
 
 #### Where users see it
 
 - Policies
 - Approvals
 - Runs
-- Connectors
 - Models
+- Connectors
 
 #### What actions users can take on it
 
 - inspect
 - edit
-- review violations or denials
+- review impact and recent denials
 
 #### What relationships matter most
 
 - tools
-- models
 - connectors
+- models
 - modules
 - approvals
 
@@ -883,7 +883,7 @@ A reusable rule set controlling access, routing, approvals, and limits.
 
 #### What it is
 
-A registered local or external model path with known capabilities and restrictions.
+A registered local or external model path with known capability tags and restrictions.
 
 #### Where users see it
 
@@ -921,8 +921,8 @@ A configured integration path for ingestion, enrichment, or export.
 
 - configure
 - enable/disable
-- inspect restrictions
 - test
+- inspect restrictions
 
 #### What relationships matter most
 
@@ -935,7 +935,7 @@ A configured integration path for ingestion, enrichment, or export.
 
 #### What it is
 
-A domain extension package that adds workflows, views, connectors, and object facets to the Corestack control plane.
+A domain extension that adds workflows, views, connectors, and object facets to the Corestack control plane.
 
 #### Where users see it
 
@@ -948,7 +948,7 @@ A domain extension package that adds workflows, views, connectors, and object fa
 - inspect
 - enable/disable
 - launch workflows
-- review contributions
+- review contributed content
 
 #### What relationships matter most
 
@@ -963,18 +963,19 @@ A domain extension package that adds workflows, views, connectors, and object fa
 
 #### Entry point
 
-- Home priority queue
+- Home priority work list
 - Launcher workflow entry
-- direct alert intake into Runs or Cases / Evidence
+- direct alert intake path
 
 #### Screens/surfaces touched
 
 - Home
+- Launcher
 - Runs
 - Cases / Evidence
 - Approvals
 - Files / Artifacts
-- Logs / Audit as needed
+- Logs / Audit when needed
 
 #### User actions
 
@@ -982,23 +983,23 @@ A domain extension package that adds workflows, views, connectors, and object fa
 - inspect normalized alert and extracted entities
 - review enrichment and findings
 - add notes or adjust case linkage
-- request escalation or disposition
+- disposition or escalate
 
 #### Agent/system actions
 
-- create run and attach or create case
+- create run and case linkage
 - normalize alert
-- call allowed tools/connectors
-- generate draft summary and findings
-- write evidence and artifacts
+- execute governed search/fetch/enrichment
+- draft summaries and findings
+- create evidence, artifacts, and timeline entries
 - request approval when required
 
 #### Approval points
 
 - escalation
-- policy exception
-- external handoff/export
+- scope exception
 - final disposition where policy requires review
+- external export or handoff
 
 #### Outputs
 
@@ -1011,65 +1012,66 @@ A domain extension package that adds workflows, views, connectors, and object fa
 #### Entry point
 
 - Launcher workflow entry
-- manual investigation action from Home
-- pivot from an existing case or evidence item
+- Home quick action
+- pivot from a case, entity, or evidence item
 
 #### Screens/surfaces touched
 
+- Home
 - Launcher
 - Runs
 - Cases / Evidence
 - Files / Artifacts
-- Approvals if required
+- Approvals when required
 
 #### User actions
 
-- enter seed entity and scope
-- review fetched sources and related entities
-- refine investigation direction
+- define seed entity and scope
+- review sources, artifacts, and extracted entities
+- refine direction of investigation
 - save findings and notes
 - initiate export if needed
 
 #### Agent/system actions
 
 - create run and case context
-- enforce policy on collection scope
-- execute search/fetch/enrichment steps
+- enforce policy on requested scope
+- execute governed search/fetch/enrichment
 - generate relationship suggestions and draft summaries
-- persist sources, artifacts, findings, and notes
+- persist findings, notes, sources, and artifacts
 
 #### Approval points
 
-- broadened search scope where policy requires it
-- sensitive external collection if later supported
-- final export or closure
+- broadened scope where policy requires it
+- higher-risk collection categories if later supported
+- export or closure where policy requires it
 
 #### Outputs
 
 - entity profile
 - supporting evidence set
-- investigator summary
+- exportable investigation summary
 
 ### Incident evidence pack generation
 
 #### Entry point
 
-- action from a case detail view
-- action from an approval request
-- action from a completed run
+- case detail action
+- approval follow-up action
+- completed run action
 
 #### Screens/surfaces touched
 
 - Cases / Evidence
 - Files / Artifacts
 - Approvals
-- Logs / Audit for verification
+- Logs / Audit for review and verification
 
 #### User actions
 
 - choose report scope and output type
 - review included evidence and unresolved gaps
-- inspect draft report and manifest
+- inspect manifest and draft outputs
 - approve release or request changes
 
 #### Agent/system actions
@@ -1078,44 +1080,45 @@ A domain extension package that adds workflows, views, connectors, and object fa
 - draft chronology and summaries
 - generate manifest and report artifacts
 - write export bundle
-- log release and handoff events
+- record release and handoff events
 
 #### Approval points
 
-- redactions
+- redactions where required
 - final release
 - external handoff/export
 
 #### Outputs
 
-- incident evidence pack
+- evidence pack manifest
 - analyst report
 - management summary
+- export bundle reference
 
 ## 6. Approval and HITL UX
 
 ### Where approvals appear
 
-- global Approvals queue
+- global Approvals surface
+- Home widgets for relevant personas
 - run detail pages
 - case detail pages
-- Home widgets for relevant personas
 
 ### What information the approver sees
 
-Every approval detail should show:
+Each approval detail should show:
 
 - requested action
 - requester
 - linked case and run
-- policy reason for gating
-- summary of evidence and findings relevant to the decision
-- impact of approve vs deny
-- deadline, escalation path, and any prior related approvals
+- relevant policy reason
+- evidence and finding summary
+- impact of approve versus deny
+- deadline, escalation path, and related prior approvals
 
 ### Approve / deny / request changes / escalate states
 
-User-facing states should include:
+The UX should support:
 
 - pending
 - approved
@@ -1125,28 +1128,28 @@ User-facing states should include:
 - expired
 - overridden
 
-The UX should make it clear which states are terminal and which return work back to the analyst.
+The UI should distinguish terminal states from states that return work to the analyst.
 
 ### How overrides are shown
 
-- overrides must be visibly distinct from ordinary approvals
-- the UI should show who overrode, why, under what authority, and what scope was overridden
-- overridden actions should remain searchable from Logs / Audit and visible from the linked case/run
+- overrides must be visually distinct from ordinary approvals
+- the UI should show who overrode, why, what authority applied, and what scope changed
+- override history must remain visible from the approval detail, linked case/run, and Logs / Audit
 
 ### How auditability is exposed in the UI
 
-- every approval shows a decision history panel
-- linked audit events are accessible from the approval detail
-- users can pivot from approval to case, run, policy, and export objects
-- changes to approval state should be timeline-visible on the case
+- approval detail includes a decision-history panel
+- linked audit events are directly accessible
+- users can pivot from approval to case, run, policy, and export
+- approval state changes should also appear in the case timeline
 
 ## 7. Evidence and case UX
 
 ### How evidence is collected and attached
 
-- evidence can be created from workflow steps automatically
+- workflows should attach evidence by default as outputs are produced
 - analysts can attach existing artifacts or findings to a case
-- workflows should attach evidence by default rather than forcing manual filing
+- evidence creation should not require manual filing for routine workflow outputs
 
 ### How provenance is shown
 
@@ -1154,41 +1157,41 @@ Each evidence detail should expose:
 
 - source
 - acquisition method
-- collector/tool used
-- time collected
+- tool or connector used
+- collection time
 - parent/derived-from references
-- integrity metadata if present
+- integrity metadata where present
 - linked run and case
 
 ### How cases are reviewed
 
-Case detail should center:
+Case review should center:
 
-- case summary and status
-- findings panel
+- summary and status
+- findings
 - evidence list
 - timeline
 - related runs
 - approvals
 - export readiness
 
-Review should feel chronological and evidence-first, not document-first.
+The review model should feel chronological and evidence-first rather than document-first.
 
 ### How exports are initiated
 
 - from case detail
 - from approved workflow outputs
-- from evidence pack preparation panels
+- from evidence-pack preparation panels
 
-Export initiation should require scope selection, show policy implications, and make approval requirements explicit before submission.
+Export initiation should show scope, policy implications, and approval requirements before submission.
 
 ### What makes the experience analyst-friendly
 
-- clear separation of draft system output from approved findings
+- clear separation between draft system output and approved findings
 - one-click pivots between run, case, evidence, artifact, and approval
 - visible blockers such as denied tools or pending approvals
-- evidence support shown next to findings, not hidden behind secondary screens
-- timeline and provenance always accessible from the current work context
+- evidence support shown near findings rather than hidden in separate flows
+- timeline and provenance accessible from the active work context
 
 ## 8. Module UX extension rules
 
@@ -1212,16 +1215,17 @@ Modules may add:
 
 ### What module-specific panels are allowed
 
-Allowed module panels include:
+Allowed module-specific panels include:
 
 - workflow-specific input panels
 - domain-specific evidence views
 - investigation summary panels
-- module-specific dashboards inside the module context
+- module-specific dashboards within the module context
 
 ### What must remain core-owned
 
 - desktop shell and top-level navigation structure
+- Home and Launcher shell behavior
 - Runs
 - Approvals
 - Cases / Evidence base model
@@ -1230,10 +1234,11 @@ Allowed module panels include:
 - Policies
 - Models
 - Connectors
+- Modules
 - Settings
 - Admin / Tenancy
 
-Modules can specialize these surfaces but must not replace them.
+Modules may specialize these surfaces but may not replace them.
 
 ## 9. MVP UX scope
 
@@ -1241,16 +1246,19 @@ Modules can specialize these surfaces but must not replace them.
 
 Desktop shell:
 
-- Home
-- Launcher
-- persistent top-level navigation
-- global search or jump entry if feasible
+- persistent shell and top-level navigation
+- one coherent control-plane layout
+
+Home and launcher:
+
+- Home overview with active work and blockers
+- Launcher for module and workflow entry points
 
 Module 1 workflows:
 
-- launch Security/OSINT investigations
-- run detail view with steps, outputs, and blockers
+- run detail view with steps, blockers, and linked objects
 - case detail view with findings, evidence, timeline, and related runs
+- workflow launch paths for the first three Security/OSINT workflows
 
 Approvals:
 
@@ -1262,7 +1270,7 @@ Evidence/cases:
 - case list
 - case detail
 - evidence detail
-- artifact preview or metadata view
+- artifact preview or metadata detail
 
 Logs/audit:
 
@@ -1275,42 +1283,42 @@ Admin essentials:
 - policy list/detail
 - model list/detail
 - module list/detail
-- basic system/admin status
+- basic health/admin status
 
 ### Explicitly deferred
 
 - advanced visual analytics
-- complex graph-native investigation canvas
+- graph-native investigation canvas
 - broad personalization
-- full no-code workflow designer
-- deep tenancy management UX
+- full workflow designer
+- deep tenancy UX
 - extensive executive dashboarding
-- rich collaboration/chat surfaces
+- collaboration/chat surfaces
 
 ## 10. Open UX questions
 
-- Should Home be role-tailored by default or mostly consistent across personas?
-- Should Runs or Cases / Evidence be the primary working surface for analysts after intake?
-- What is the first-class entry point for alert-driven work: Home queue, Cases, or Runs?
-- How much entity/relationship visualization is required in MVP versus later?
-- Should approvals be a dedicated top-level destination for all personas or mainly reviewers/admins?
+- Should Home be heavily role-tailored or mostly consistent across personas?
+- After intake, should analysts work primarily from Runs or Cases / Evidence?
+- What is the best first-class entry point for alert-driven work: Home queue, Launcher shortcut, or direct case/run intake?
+- How much entity/relationship visualization is required in MVP?
+- Should approvals remain a top-level destination for all personas or mainly for reviewers/admins?
 - What is the minimum artifact preview experience needed for analyst confidence?
-- How should module-specific panels be visually distinguished without fragmenting the product?
+- How should module-specific panels be visually distinct without fragmenting the product?
 - What is the right balance between timeline-first and evidence-grid-first case review?
-- How should future tenancy or workspace boundaries appear without cluttering the single-product shell?
 
 ## Alignment
 
 This document is intended to align:
 
 - [ISSUES_ORDER.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/ISSUES_ORDER.md)
+- [docs/roadmap/CORESTACK_ISSUE_DRAFTS.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/docs/roadmap/CORESTACK_ISSUE_DRAFTS.md)
 - [SECURITY_OSINT_MODULE_1.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/SECURITY_OSINT_MODULE_1.md)
 - [REFERENCE_ARCHITECTURE_SECURITY_OSINT_MODULE_1.md](/Users/leecuevas/Projects/corestack-bootstrap-kit/REFERENCE_ARCHITECTURE_SECURITY_OSINT_MODULE_1.md)
 
-It should guide the UX and product-surface work for:
+It should guide:
 
-- the single Corestack desktop/control plane
+- control-plane UX surface definition
 - Module 1 operator workflows
-- approvals and HITL UX
+- approval and HITL UX
 - evidence/case review UX
-- module extension rules and MVP UI scope
+- module extension rules
