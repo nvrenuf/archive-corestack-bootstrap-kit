@@ -155,9 +155,9 @@ test("audit hooks emit structured decision payloads", async () => {
 
   await gateway.execute({ tool: "web.fetch", request: fetchRequest() });
 
-  const decisionEvent = events.find((event) => event.event_type === "tool.gateway.decision");
+  const decisionEvent = events.find((event) => event.event_type === "tool.execution.decisioned");
   assert.ok(decisionEvent);
-  assert.equal(decisionEvent.outcome, "allow");
-  assert.equal(decisionEvent.decision_id, "dec-allow");
-  assert.equal(decisionEvent.correlation_id, "corr-1");
+  assert.equal(decisionEvent.payload.outcome, "allow");
+  assert.equal(decisionEvent.correlation.decision_id, "dec-allow");
+  assert.equal(decisionEvent.correlation.correlation_id, "corr-1");
 });
