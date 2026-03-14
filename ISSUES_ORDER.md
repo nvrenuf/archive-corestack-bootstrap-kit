@@ -125,9 +125,9 @@ Note: These are MVP-slice thin-slice reconciliations. Keep Milestone issues #4/#
 
 15. **Docs: runbook + configuration + threat model notes**  #23 — https://github.com/nvrenuf/corestack-bootstrap-kit/issues/23  
     Owner: TBD  
-    - [ ] Runbook and configuration docs exist  
-    - [ ] Threats and mitigations are documented  
-    - [ ] Operational troubleshooting is documented
+    - [x] Runbook and configuration docs exist (MVP thin-slice operator path documented)  
+    - [x] Threats and mitigations are documented (MVP trust boundaries + fail-closed notes)  
+    - [x] Operational troubleshooting is documented (MVP-supported path)
 
 ---
 

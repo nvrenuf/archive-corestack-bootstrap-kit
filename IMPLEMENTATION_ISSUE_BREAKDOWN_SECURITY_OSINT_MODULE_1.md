@@ -922,6 +922,7 @@ Recommended build order for the first implementation slice:
 16. Issue 7.2: Implement the first end-to-end Module 1 workflow: Alert triage and investigation
 17. Issue 8.1: Implement run detail and case detail review surfaces
 18. Issue 8.2: Implement artifact/evidence detail and linked audit lookup
+19. Issue 9.1: Docs: runbook + configuration + threat model notes
 
 Issues that must come first:
 
@@ -1011,3 +1012,20 @@ What is now covered:
 What remains open for full issue completion:
 - broader platform-grade validation breadth outside the current MVP-supported tool/module path
 - future tool/provider/module matrix expansion
+
+
+## Issue #23 reconciliation update (MVP thin slice)
+
+Status update:
+- MVP-thin documentation hardening slice is now implemented for the currently supported operational path.
+
+What is now covered:
+- runbook instructions for supported run/operate flow and validation entry points
+- configuration expectations for gateway/n8n wiring and security defaults
+- trust-boundary and fail-closed threat notes aligned to current implementation
+- audit/security-event role in reviewability and known caveats/deferred scope
+
+What remains open for full platform maturity:
+- broad enterprise operations/deployment documentation breadth
+- future module/tool/provider matrix runbooks
+- full platform-grade threat modeling and long-horizon security governance artifacts

@@ -92,6 +92,28 @@ This starts:
 
 The script sets gateway webhook env vars to the mock server so E2E requests can be run locally.
 
+
+## Supported MVP operation path (current slice)
+
+This runbook is intentionally scoped to the currently implemented MVP slice:
+
+1. Start the gateway against either imported n8n workflows or the local mock backend.
+2. Execute governed `web.fetch` / `web.search` calls through the tool gateway only.
+3. Run the MVP validation harness (`make mvp-validation`) for repeatable allow/deny/fail-closed coverage.
+4. Verify correlated audit/security events for run reviewability in Logs/Audit and JSONL output.
+5. Exercise the Security/OSINT Alert Triage and Investigation path and review linked run/case/evidence artifacts.
+
+This does **not** claim full platform operations coverage, multi-module matrix validation, or enterprise deployment breadth.
+
+## Security defaults and assumptions (MVP)
+
+- Deny-by-default applies when allowlist inputs are empty or hostname checks fail.
+- Gateway request validation is schema-first with normalized fail-closed errors.
+- Timeout and payload bounds (`WEB_TIMEOUT_MS`, `WEB_MAX_BYTES`) are enforced at the gateway boundary.
+- `TOOL_SHARED_SECRET` is recommended as the minimum shared trust control for gateway↔n8n calls.
+- Audit events are structured and correlation-oriented; URL query/fragment parts are redacted from emitted URL fields.
+- Model routing posture for supported workflows is local-first with restriction hooks for disallowed external providers.
+
 ## Troubleshooting
 
 ### 401 UNAUTHORIZED
@@ -183,3 +205,11 @@ Equivalent direct command:
 
 This harness is intentionally scoped to the currently supported MVP path and is not a full future-tool/module matrix.
 
+
+## Known caveats and deferred scope
+
+- Current guidance is for the MVP thin slice only; it is not a full enterprise operations guide.
+- Tool coverage is limited to `web.fetch` and `web.search` on the supported gateway path.
+- Gateway rate-limit strategy and broader connector/provider controls remain tracked outside this slice.
+- Audit/event taxonomy governance and long-horizon retention architecture remain in-progress platform work.
+- Forensic/export packaging, broad compliance docs, and unsupported deployment patterns are intentionally deferred.

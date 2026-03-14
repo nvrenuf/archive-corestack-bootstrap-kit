@@ -6,11 +6,11 @@
 
 ## Latest issue update
 
-- Issue name: Issue #22 — Integration tests + validation harness (E2E, negative tests, allowlist tests)
-- Status: completed for MVP thin-slice sequencing (full issue remains open for broader non-MVP matrix breadth)
+- Issue name: Issue #23 — Docs: runbook + configuration + threat model notes
+- Status: completed for MVP thin-slice sequencing (documentation hardening for the current supported path; broader platform-grade docs breadth remains open)
 - Commit hash: `TBD`
-- Short note: Added a narrow CI-friendly validation harness and integration tests for the current supported tool-gateway + Security/OSINT Module 1 path, including allow, malformed/disallowed denial, oversize fail-closed, timeout fail-closed, schema conformance, and normalized audit/security event expectations.
-- Next recommended issue: Continue #23 docs/runbook hardening, then remaining non-MVP platform hardening for #18 and #21 breadth.
+- Short note: Hardened MVP operator documentation across runbook/configuration/threat-model sources with explicit supported run/validation steps, trust boundaries, fail-closed assumptions, audit/security-event review guidance, and honest deferred-scope notes for non-MVP breadth.
+- Next recommended issue: Continue remaining non-MVP platform hardening breadth for #18 and #21, or start the next visible capability thin-slice once those risk controls are stable.
 
 ## Completed issues (verified in `main`)
 
@@ -30,6 +30,7 @@
 - [x] Implement first end-to-end Module 1 workflow: Alert triage and investigation (`ee7ccce`, PR TBD)
 - [x] Implement run detail and case detail review surfaces (`current branch head`, PR TBD)
 - [x] Implement artifact/evidence detail and linked audit lookup surfaces (`current branch head`, PR TBD)
+- [x] Docs/runbook/configuration/threat-model notes hardened for the MVP-supported operation path (`current branch head`, PR TBD); full platform-grade operations/documentation breadth remains out of scope.
 
 ## In-progress issues
 
@@ -40,7 +41,7 @@
 
 ## Next recommended issue
 
-- Prioritize #23 docs/runbook hardening for operator closeout, then continue remaining non-MVP breadth for #21 and #18 platform controls.
+- Continue remaining non-MVP breadth for #21 and #18 platform controls, then choose the next visible product capability thin-slice.
 
 ## References
 

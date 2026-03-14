@@ -27,6 +27,29 @@ Current implementation now covers the first operational foundation slice of this
 
 This document remains the canonical architecture description and target boundaries. `IMPLEMENTATION_STATUS.md` tracks issue-by-issue execution state.
 
+## 1B. MVP threat model notes (current supported slice)
+
+### Trust boundaries that currently matter
+
+- **Operator/UI boundary**: user-triggered workflow actions enter core contracts through the control-plane shell.
+- **Control plane ↔ tool gateway boundary**: external fetch/search is only supported via governed gateway endpoints, not direct module egress.
+- **Tool gateway ↔ n8n/provider boundary**: upstream execution is treated as untrusted; responses are normalized before use.
+- **Model routing boundary**: local-first model execution is the default; policy restrictions can block disallowed external-provider routes.
+- **Storage/audit boundary**: run/case/evidence state and structured events provide reconstruction context for review.
+
+### Current risk posture and assumptions
+
+- Fail-closed outcomes are required for malformed requests, disallowed hostnames, payload/timeout limit breaches, and blocked provider routes.
+- Audit/security events are treated as required operational evidence for reviewing governed actions and denials.
+- URL fields emitted by gateway audit events are redaction-safe for query/fragment components in the current slice.
+- Shared-secret protection for gateway↔n8n requests is the minimum supported integrity check; stronger deployment controls remain environment responsibilities.
+
+### Non-goals / open risks outside this slice
+
+- Not a complete STRIDE-level threat model for every future module/provider/connector permutation.
+- Not full tamper-evident logging, cross-system attestation, or enterprise key management guidance.
+- Not broad multi-tenant hard isolation documentation for unimplemented enterprise modes.
+
 ## 2. Platform contracts exercised by Module 1
 
 ### Workflow/run contract
