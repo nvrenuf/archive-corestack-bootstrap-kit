@@ -86,6 +86,14 @@ The following MVP foundations are now implemented in core and are no longer plan
 
 This document remains the canonical product/requirements baseline. For execution-level issue tracking and in-progress detail, see `IMPLEMENTATION_STATUS.md`.
 
+### 2A.1 MVP operations/documentation baseline
+
+The MVP-supported operator path is now documented in `docs/tool-system/RUNBOOK.md` with explicit run/configuration/validation instructions and thin-slice security assumptions.
+
+The documented validation entry point for this slice is `make mvp-validation` (wrapper for `scripts/tool-system/validate-mvp-slice.sh`).
+
+Threat-model notes for this MVP slice are captured in `REFERENCE_ARCHITECTURE_SECURITY_OSINT_MODULE_1.md` and `AUDIT_EVENT_MODEL.md`; these notes describe current trust boundaries and fail-closed assumptions without claiming unfinished platform-grade breadth.
+
 ## 3. Functional requirements
 
 ### 3.1 Control plane shell

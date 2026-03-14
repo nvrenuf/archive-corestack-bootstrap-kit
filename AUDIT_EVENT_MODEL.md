@@ -43,6 +43,16 @@ Still deferred (by design):
 
 This document remains the canonical architecture and capability model for audit/events. `IMPLEMENTATION_STATUS.md` is the execution tracker for what has landed versus what is still open.
 
+## 2B. MVP security-event operating assumptions
+
+For the currently supported tool-gateway + Module 1 slice:
+
+- Security/audit events are part of the operational contract, not optional diagnostics.
+- Reviewability depends on stable correlation fields (`run_id`, `case_id`, tool and evidence object references, and reason/error codes).
+- Redaction posture is baseline: URL query/fragment values are stripped in gateway-emitted URL audit fields.
+- Logs are not a sensitive-data vault; operators must avoid raw-secret/PII inclusion in request payload conventions and downstream tooling.
+- This model improves reconstruction but does not yet provide immutable/tamper-proof guarantees in MVP scope.
+
 ## 3. What an event is
 
 An event is a typed, timestamped, structured record of a significant platform action or decision.

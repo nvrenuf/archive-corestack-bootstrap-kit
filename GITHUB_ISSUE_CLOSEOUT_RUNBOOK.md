@@ -184,3 +184,10 @@ Status update: completed for MVP thin-slice sequencing (keep issue open for non-
 Implemented a narrow, CI-friendly validation harness for the currently supported Corestack MVP path, including tool-gateway integration/E2E tests that verify golden-path allow behavior, malformed/disallowed fail-closed behavior, oversize and timeout fail-closed behavior, schema/contract conformance, and normalized audit/security event expectations. Added a repeatable runner (`scripts/tool-system/validate-mvp-slice.sh`, `make mvp-validation`) and preserved compatibility checks for the current Security/OSINT Alert Triage and Investigation workflow path.
 
 This does not claim broad generic platform test-framework completion or future tool/provider/module matrix coverage.
+
+
+## Issue status note to paste for #23 (docs: runbook + configuration + threat model notes)
+
+Status update: completed for MVP thin-slice sequencing (keep broader platform-grade operations/docs breadth as future work).
+
+Hardened the current supported documentation path so operators can run and validate MVP behavior without code spelunking: updated runbook execution/configuration/validation guidance, added implementation-aware threat boundary and fail-closed assumptions, clarified audit/security-event review expectations, and documented known deferred scope explicitly to avoid over-claiming unfinished breadth.

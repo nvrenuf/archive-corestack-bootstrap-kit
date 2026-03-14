@@ -68,6 +68,21 @@ Security/OSINT Module 1 now has a real implemented foundation in the core platfo
 
 This specification continues to define module intent and architecture-facing product requirements. `IMPLEMENTATION_STATUS.md` remains the execution tracker.
 
+## 2B. Current MVP operation and validation path
+
+Supported now:
+
+- Launch Alert Triage and Investigation from the core launcher/module path.
+- Execute governed tool steps through the tool gateway (`web.fetch` and `web.search`) with allowlist and policy decisions.
+- Persist and review run/case/evidence/artifact/finding linkages through core-owned review surfaces.
+- Validate the supported path with `make mvp-validation` and review expected audit/security events.
+
+Deferred by design:
+
+- broader OSINT workflow families beyond the first implemented alert-triage slice
+- broad export/report package workflows and enterprise forensic handling
+- unsupported connector/provider permutations
+
 ## 3. Primary users
 
 ### SOC analyst

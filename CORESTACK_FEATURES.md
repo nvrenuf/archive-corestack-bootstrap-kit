@@ -51,3 +51,17 @@ Capability-oriented source of truth for CoreStack feature status.
 
 ### Planned / deferred
 - Broader future-module/tool matrix and non-MVP platform-wide validation expansion.
+
+
+## MVP runbook, configuration, and threat-model documentation
+
+### Implemented now
+- MVP runbook documents supported run path, required environment/configuration, validation commands, and troubleshooting for the current tool-gateway slice.
+- Threat-model notes document current trust boundaries, fail-closed assumptions, audit/security-event review role, and local-first model restriction posture.
+- Deferred scope is explicitly called out to avoid claiming unsupported platform-grade operations breadth.
+
+### Partially implemented
+- Documentation is intentionally scoped to the currently supported MVP path and does not yet cover full platform operations maturity.
+
+### Planned / deferred
+- Expanded operational runbooks for broader module/tool/provider matrix, enterprise hardening controls, and forensic/export depth.
