@@ -96,11 +96,92 @@ export function renderModuleHook(modules = []) {
   `;
 }
 
+function renderModulesSurface(context = {}) {
+  const modules = context.modules ?? [];
+  const surfaceRelationships = context.surfaceRelationships ?? [];
+  const moduleWorkflowLinks = context.moduleWorkflowLinks ?? [];
+  const module1Capability = context.module1Capability ?? null;
+  const statusFraming = context.statusFraming ?? {
+    implementedNow: [],
+    partiallyImplemented: [],
+    plannedDeferred: [],
+  };
+
+  return `
+    <section class="surface-grid" data-surface-id="modules">
+      <article class="shell-panel feature-panel">
+        <span class="surface-meta">Core-owned module architecture workspace</span>
+        <h3>Modules</h3>
+        <p>Operator-facing view of domain capability packages registered in Corestack, their current contribution path, and what remains intentionally deferred.</p>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">What a module means here</span>
+        <h3>Module model in the current MVP</h3>
+        <ul class="placeholder-list">
+          <li>A module is a domain capability package that contributes workflows, data relationships, and extension behavior into the shared control plane.</li>
+          <li>A nav item is not a module; Modules is a core-owned architecture and posture surface.</li>
+          <li>This page is read-oriented and intentionally avoids fake install/update or marketplace controls.</li>
+        </ul>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Implemented now</span>
+        <h3>Registered module inventory</h3>
+        ${modules.length
+          ? `<ul class="placeholder-list">${modules.map((module) => `<li><strong>${module.name}</strong><span> · ${module.id}</span><span> · ${module.status}</span><span> · ${module.capabilities?.length ?? 0} capability(ies)</span></li>`).join("")}</ul>`
+          : "<p>No modules are currently registered in this environment.</p>"}
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Core surface participation</span>
+        <h3>How modules relate to core-owned surfaces</h3>
+        ${surfaceRelationships.length
+          ? `<ul class="placeholder-list">${surfaceRelationships.map((item) => `<li><strong>${item.surface}</strong><span> · ${item.state}</span><br /><small>${item.notes}</small></li>`).join("")}</ul>`
+          : "<p>No module-to-surface relationships are currently mapped.</p>"}
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Module 1 capability map</span>
+        <h3>Security / OSINT Module 1 contribution</h3>
+        ${module1Capability
+          ? `<ul class="placeholder-list">
+              <li><strong>Workflow:</strong> ${module1Capability.workflowName} (${module1Capability.workflowId})</li>
+              <li><strong>Runs observed:</strong> ${module1Capability.runCount}</li>
+              <li><strong>Linked cases:</strong> ${module1Capability.caseCount}</li>
+              <li><strong>Evidence objects:</strong> ${module1Capability.evidenceCount} evidence, ${module1Capability.artifactCount} artifacts, ${module1Capability.findingCount} findings</li>
+              <li><strong>Governance/audit signals:</strong> ${module1Capability.approvalCount} approvals, ${module1Capability.auditEventCount} correlated events</li>
+            </ul>`
+          : "<p>Security / OSINT Module 1 has not produced runtime data yet; registration and workflow linkage remain visible.</p>"}
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Workflow linkage</span>
+        <h3>Registered workflow contribution</h3>
+        ${moduleWorkflowLinks.length
+          ? `<ul class="placeholder-list">${moduleWorkflowLinks.map((item) => `<li><strong>${item.workflowName}</strong><span> · ${item.workflowId}</span><span> · module ${item.moduleId}</span></li>`).join("")}</ul>`
+          : "<p>No module workflow links are currently registered.</p>"}
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Scope framing</span>
+        <h3>Implemented vs partial vs planned/deferred</h3>
+        <h4>Implemented now</h4>
+        <ul class="placeholder-list">
+          ${statusFraming.implementedNow.map((item) => `<li>${item}</li>`).join("")}
+        </ul>
+        <h4>Partially implemented</h4>
+        <ul class="placeholder-list">
+          ${statusFraming.partiallyImplemented.map((item) => `<li>${item}</li>`).join("")}
+        </ul>
+        <h4>Planned / deferred</h4>
+        <ul class="placeholder-list">
+          ${statusFraming.plannedDeferred.map((item) => `<li>${item}</li>`).join("")}
+        </ul>
+      </article>
+    </section>
+  `;
+}
+
 function renderRunSummary(run) {
   return `
     <li>
       <strong>${run.workflowName}</strong>
-      <span> · ${run.status}</span>
+      <span> · ${renderToneBadge(run.status)}</span>
       <span> · ${run.currentStepTitle}</span>
       ${run.caseId ? `<span> · Case ${run.caseId}</span>` : ""}
     </li>
@@ -111,10 +192,25 @@ function renderCaseSummary(caseItem) {
   return `
     <li>
       <strong>${caseItem.title}</strong>
-      <span> · ${caseItem.status}</span>
+      <span> · ${renderToneBadge(caseItem.status)}</span>
       <span> · ${caseItem.runIds.length} linked run(s)</span>
     </li>
   `;
+}
+
+function renderToneBadge(rawValue = "") {
+  const value = String(rawValue);
+  const normalized = value.toLowerCase();
+  if (["critical", "high", "failed", "error", "denied", "blocked"].includes(normalized)) {
+    return `<span class="tone-badge tone-danger">${value}</span>`;
+  }
+  if (["approved", "healthy", "success", "completed", "low", "ok"].includes(normalized)) {
+    return `<span class="tone-badge tone-success">${value}</span>`;
+  }
+  if (["medium", "pending", "review", "open", "in_review"].includes(normalized)) {
+    return `<span class="tone-badge tone-warning">${value}</span>`;
+  }
+  return `<span class="tone-badge tone-neutral">${value}</span>`;
 }
 
 function renderPlatformUtilitiesPanel() {
@@ -418,7 +514,7 @@ function renderInvestigationWorkspaceSurface(context = {}) {
         <span class="surface-meta">Investigation selector</span>
         <h3>Cases</h3>
         ${cases.length
-          ? `<ul class="placeholder-list">${cases.map((caseItem) => `<li><a href="#/investigation-workspace?caseId=${caseItem.caseId}">${caseItem.title}</a><span> · ${caseItem.status}</span></li>`).join("")}</ul>`
+          ? `<ul class="placeholder-list">${cases.map((caseItem) => `<li><a href="#/investigation-workspace?caseId=${caseItem.caseId}">${caseItem.title}</a><span> · ${renderToneBadge(caseItem.status)}</span></li>`).join("")}</ul>`
           : "<p>No cases available yet. Start from Launcher to create the first investigation context.</p>"}
       </article>
       <article class="shell-panel">
@@ -427,7 +523,7 @@ function renderInvestigationWorkspaceSurface(context = {}) {
         ${selectedCase
           ? `<ul class="placeholder-list">
               <li><strong>Title:</strong> ${selectedCase.title ?? "n/a"}</li>
-              <li><strong>Status:</strong> ${selectedCase.status}</li>
+              <li><strong>Status:</strong> ${renderToneBadge(selectedCase.status)}</li>
               <li><strong>Module:</strong> ${selectedCase.moduleId ?? "n/a"}</li>
               <li><strong>Linked runs:</strong> ${linkedRuns.length}</li>
             </ul>`
@@ -439,7 +535,7 @@ function renderInvestigationWorkspaceSurface(context = {}) {
         ${primaryRun
           ? `<ul class="placeholder-list">
               <li><strong>Workflow:</strong> ${primaryRun.workflowName}</li>
-              <li><strong>Status:</strong> ${primaryRun.status}</li>
+              <li><strong>Status:</strong> ${renderToneBadge(primaryRun.status)}</li>
               <li><strong>Current step:</strong> ${primaryRun.currentStepTitle ?? "n/a"}</li>
               <li><strong>Policy decisions:</strong> ${primaryRun.policyDecisions?.length ?? 0}</li>
             </ul>`
@@ -454,7 +550,7 @@ function renderInvestigationWorkspaceSurface(context = {}) {
           <li>Resolved or dismissed: ${findings.length - openFindings}</li>
         </ul>
         ${findings.length
-          ? `<ul class="placeholder-list">${findings.slice(0, 3).map((item) => `<li>${item.severity} · <a href="#/files-artifacts?findingId=${item.findingId}">${item.summary}</a>${item.evidenceIds?.[0] ? ` · <a href="#/files-artifacts?evidenceId=${item.evidenceIds[0]}">evidence</a>` : ""}${item.artifactIds?.[0] ? ` · <a href="#/files-artifacts?artifactId=${item.artifactIds[0]}">artifact</a>` : ""}${item.findingId ? ` · <a href="#/logs-audit?findingId=${item.findingId}">audit</a>` : ""}</li>`).join("")}</ul>`
+          ? `<ul class="placeholder-list">${findings.slice(0, 3).map((item) => `<li>${renderToneBadge(item.severity)} · <a href="#/files-artifacts?findingId=${item.findingId}">${item.summary}</a>${item.evidenceIds?.[0] ? ` · <a href="#/files-artifacts?evidenceId=${item.evidenceIds[0]}">evidence</a>` : ""}${item.artifactIds?.[0] ? ` · <a href="#/files-artifacts?artifactId=${item.artifactIds[0]}">artifact</a>` : ""}${item.findingId ? ` · <a href="#/logs-audit?findingId=${item.findingId}">audit</a>` : ""}</li>`).join("")}</ul>`
           : "<p>No findings generated yet for this investigation.</p>"}
       </article>
       <article class="shell-panel">
@@ -709,8 +805,8 @@ function renderFindingDetail(context = {}) {
       <h3>${selectedFinding.findingId}</h3>
       <ul class="placeholder-list">
         <li><strong>Type:</strong> ${selectedFinding.type}</li>
-        <li><strong>Severity:</strong> ${selectedFinding.severity}</li>
-        <li><strong>Status:</strong> ${selectedFinding.lifecycleState}</li>
+        <li><strong>Severity:</strong> ${renderToneBadge(selectedFinding.severity)}</li>
+        <li><strong>Status:</strong> ${renderToneBadge(selectedFinding.lifecycleState)}</li>
         <li><strong>Summary:</strong> ${selectedFinding.summary}</li>
         <li><strong>Linked evidence:</strong> ${selectedFinding.evidenceIds?.length ?? 0}</li>
         <li><strong>Linked artifacts:</strong> ${selectedFinding.artifactIds?.length ?? 0}</li>
@@ -1084,54 +1180,148 @@ function renderConnectorsSurface(context = {}) {
   `;
 }
 
-function renderSettingsSurface() {
+function renderSettingsSurface(context = {}) {
+  const {
+    runtimeDefaults = {},
+    readinessSignals = {},
+    coreDependencyPosture = [],
+    docsEntryPoints = [],
+  } = context;
+
   return `
     <section class="surface-grid" data-surface-id="settings">
       <article class="shell-panel feature-panel">
         <span class="surface-meta">Core-owned platform surface</span>
         <h3>Settings</h3>
-        <p>Central place for platform-level configuration status and runbook entry points in a local-first MVP environment.</p>
+        <p>Configuration/readiness workspace for understanding the current platform runtime posture, governance defaults, and where operators should look before making environment-level changes.</p>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Runtime posture visible now</span>
+        <h3>Current MVP configuration assumptions</h3>
+        <ul class="placeholder-list">
+          <li>Local-first model routes in registry: ${runtimeDefaults.localModelCount ?? 0}.</li>
+          <li>External model routes in registry: ${runtimeDefaults.externalModelCount ?? 0}.</li>
+          <li>Registered modules consuming core runtime contracts: ${runtimeDefaults.moduleCount ?? 0}.</li>
+          <li>Registered workflows using shared run/case/evidence/policy/audit contracts: ${runtimeDefaults.workflowCount ?? 0}.</li>
+          <li>Governed connector paths declared in this MVP: ${runtimeDefaults.connectorPathCount ?? 0}.</li>
+        </ul>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Operational readiness signals</span>
+        <h3>What operators can verify in-product now</h3>
+        <ul class="placeholder-list">
+          <li>Runs tracked: ${readinessSignals.runCount ?? 0}; cases tracked: ${readinessSignals.caseCount ?? 0}; pending approvals: ${readinessSignals.pendingApprovalCount ?? 0}.</li>
+          <li>Observed policy decisions across runs: ${readinessSignals.policyDecisionCount ?? 0}.</li>
+          <li>Correlated model and tool governance events in audit history: ${readinessSignals.governanceEventCount ?? 0}.</li>
+          <li>This page is status/visibility-first and intentionally does not expose fake persistent settings editors.</li>
+        </ul>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Core relationships</span>
+        <h3>Settings boundaries across platform capabilities</h3>
+        ${coreDependencyPosture.length
+          ? `<ul class="placeholder-list">${coreDependencyPosture.map((item) => `<li><strong>${item.area}</strong><span> · ${item.state}</span><br /><small>${item.notes}</small></li>`).join("")}</ul>`
+          : "<p>No core dependency posture entries are currently mapped.</p>"}
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Runbooks and source-of-truth docs</span>
+        <h3>Where the current operational contract is documented</h3>
+        ${docsEntryPoints.length
+          ? `<ul class="placeholder-list">${docsEntryPoints.map((item) => `<li><strong>${item.label}</strong><span> · ${item.path}</span><br /><small>${item.notes}</small></li>`).join("")}</ul>`
+          : "<p>No documentation entry points are currently listed.</p>"}
       </article>
       ${renderCapabilityStatus({
         ownership: "Core-owned",
         implemented: [
-          "Configuration templates and runbooks define the current operational contract.",
-          "Threat model, schema references, and hardening docs are linked from the docs/runbook set.",
+          "Current settings posture is projected from existing runtime contracts (models/workflows/modules/connectors), audit events, and governance outcomes.",
+          "Operators can verify current local-first assumptions and environment readiness without pretending there is a full configuration-management backend.",
+          "Runbook and source-of-truth documentation entry points are surfaced as the current mechanism for applying platform-level configuration changes.",
         ],
         planned: [
-          "In-product settings editors remain deferred.",
-          "Tenant-level settings controls remain deferred.",
+          "In-product settings editors and persistent mutation APIs remain deferred.",
+          "Secret-management/credential rotation UX and advanced day-2 automation remain deferred.",
+          "Tenant-specific settings lifecycle controls remain deferred until broader admin/tenancy foundations land.",
         ],
         moduleNotes: [
-          "Modules consume settings from core configuration contracts rather than owning separate settings UIs.",
+          "Settings remains core-owned; modules consume shared runtime/configuration contracts and should not ship module-owned settings control planes.",
         ],
       })}
+      <article class="shell-panel">
+        <span class="surface-meta">Partially implemented scope</span>
+        <h3>What is intentionally thin in this slice</h3>
+        <ul class="placeholder-list">
+          <li>Configuration visibility is strong for current MVP routes, but change workflows remain runbook-driven and outside this UI.</li>
+          <li>Readiness indicators are derived from current in-memory/local stores and currently supported module/workflow paths.</li>
+          <li>Enterprise-grade configuration governance (change windows, drift detection, approvals for config mutation) is not implemented in this slice.</li>
+        </ul>
+      </article>
     </section>
   `;
 }
 
-function renderAdminTenancySurface() {
+function renderAdminTenancySurface(context = {}) {
+  const {
+    adminBaseline = {},
+    tenancyBoundaries = [],
+    deferredControls = [],
+  } = context;
+
   return `
     <section class="surface-grid" data-surface-id="admin-tenancy">
       <article class="shell-panel feature-panel">
         <span class="surface-meta">Core-owned platform surface</span>
         <h3>Admin / Tenancy</h3>
-        <p>Tracks tenancy and admin boundaries for the control plane without introducing pretend admin automation.</p>
+        <p>Administration and tenancy-readiness workspace describing current control-plane boundaries, what isolation posture is present now, and what enterprise controls remain intentionally deferred.</p>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Current admin baseline</span>
+        <h3>Operator posture in this MVP</h3>
+        <ul class="placeholder-list">
+          <li>Current baseline mode: ${adminBaseline.mode ?? "single-operator local baseline"}.</li>
+          <li>Runs observed: ${adminBaseline.runCount ?? 0}; cases observed: ${adminBaseline.caseCount ?? 0}; approvals observed: ${adminBaseline.approvalCount ?? 0} (${adminBaseline.pendingApprovalCount ?? 0} pending).</li>
+          <li>Governance events available for admin review: ${adminBaseline.governanceEventCount ?? 0}.</li>
+          <li>This surface is read-oriented and does not claim live tenant provisioning or role management workflows.</li>
+        </ul>
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Tenancy and isolation framing</span>
+        <h3>Boundaries visible in current contracts</h3>
+        ${tenancyBoundaries.length
+          ? `<ul class="placeholder-list">${tenancyBoundaries.map((item) => `<li><strong>${item.area}</strong><span> · ${item.state}</span><br /><small>${item.notes}</small></li>`).join("")}</ul>`
+          : "<p>No tenancy boundary entries are currently mapped.</p>"}
+      </article>
+      <article class="shell-panel">
+        <span class="surface-meta">Deferred enterprise scope</span>
+        <h3>Controls intentionally not implemented yet</h3>
+        ${deferredControls.length
+          ? `<ul class="placeholder-list">${deferredControls.map((item) => `<li><strong>${item.control}</strong><span> · ${item.status}</span><br /><small>${item.notes}</small></li>`).join("")}</ul>`
+          : "<p>No deferred control entries are currently listed.</p>"}
       </article>
       ${renderCapabilityStatus({
         ownership: "Core-owned",
         implemented: [
-          "Current MVP uses a single-operator local baseline while preserving tenancy terminology in contracts and docs.",
-          "Audit and policy contracts already include actor/correlation metadata needed for future tenancy controls.",
+          "Current MVP keeps a single-operator local-first administration baseline while preserving tenancy terminology in contracts and documentation.",
+          "Audit, policy, run, and evidence contracts already carry actor/correlation context that future authorization/isolation layers can build on.",
+          "This page makes admin/tenancy scope legible without introducing fake enterprise control-plane workflows.",
         ],
         planned: [
-          "Tenant lifecycle and role management UI remain deferred.",
-          "Admin approval delegation and scoped access controls remain deferred.",
+          "Tenant lifecycle management, RBAC/SSO administration, and scoped identity governance remain deferred.",
+          "Delegated admin operations and per-tenant operational policy controls remain deferred.",
+          "Full multi-tenant SaaS control-plane operations UX remains deferred beyond this MVP thin slice.",
         ],
         moduleNotes: [
-          "Modules remain tenant-scoped through core case/run/evidence contracts rather than module-owned tenancy models.",
+          "Admin/Tenancy remains core-owned; modules inherit tenancy boundaries through core run/case/evidence/policy contracts rather than defining tenant models.",
         ],
       })}
+      <article class="shell-panel">
+        <span class="surface-meta">Partially implemented scope</span>
+        <h3>Current depth and next boundary</h3>
+        <ul class="placeholder-list">
+          <li>Tenancy posture is contract- and terminology-level today, not a full enforced multi-tenant runtime with operator tooling.</li>
+          <li>Admin readiness focuses on observability and governance correlation across existing surfaces, not mutable administration workflows.</li>
+          <li>Future authorization/isolation work should extend these core boundaries rather than creating module-owned admin panels.</li>
+        </ul>
+      </article>
     </section>
   `;
 }
@@ -1170,23 +1360,7 @@ export function renderRouteContent(route, context = {}) {
   }
 
   if (route.id === "modules") {
-    const modules = context.modules ?? [];
-    return `
-      <section class="surface-grid" data-surface-id="modules">
-        <article class="shell-panel feature-panel">
-          <span class="surface-meta">Core-owned module registry visibility</span>
-          <h3>Modules</h3>
-          <p>Registered domain capabilities are visible here without introducing marketplace behavior.</p>
-        </article>
-        <article class="shell-panel">
-          <span class="surface-meta">Registered modules</span>
-          <h3>Available capabilities</h3>
-          ${modules.length
-            ? `<ul class="placeholder-list">${modules.map((module) => `<li><strong>${module.name}</strong><span> · ${module.status}</span><span> · ${module.capabilities.length} capability(ies)</span></li>`).join("")}</ul>`
-            : "<p>No modules registered.</p>"}
-        </article>
-      </section>
-    `;
+    return renderModulesSurface(context);
   }
 
   if (route.id === "agents") {
@@ -1206,11 +1380,11 @@ export function renderRouteContent(route, context = {}) {
   }
 
   if (route.id === "settings") {
-    return renderSettingsSurface();
+    return renderSettingsSurface(context);
   }
 
   if (route.id === "admin-tenancy") {
-    return renderAdminTenancySurface();
+    return renderAdminTenancySurface(context);
   }
 
   return renderSurfacePlaceholder(route);

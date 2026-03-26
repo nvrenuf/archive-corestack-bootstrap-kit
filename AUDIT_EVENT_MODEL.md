@@ -199,3 +199,27 @@ Partially implemented:
 
 Deferred:
 - Full platform-grade analytics, long-horizon model-operations dashboards, and advanced governance forensics remain deferred.
+
+## Modules workspace audit-visibility note (MVP thin slice)
+
+Implemented now:
+- Modules surface consumes existing correlated event context to show module runtime posture (run-linked approvals and audit-event volume) for Security / OSINT Module 1.
+- No new event taxonomy/category is introduced; this slice composes existing run/case/evidence/tool/model/policy/audit relationships.
+
+Partially implemented:
+- Event projection is read-oriented and scoped to current module workflow path coverage.
+
+Planned/deferred:
+- Dedicated module-platform analytics dashboards and long-horizon module operations reporting remain deferred.
+
+## Settings + Admin / Tenancy visibility note (MVP thin slice)
+
+Implemented now:
+- Settings and Admin / Tenancy surfaces now consume existing correlated governance signals (policy decisions, approval counts, model/tool governance events, run/case posture) to make platform readiness and admin boundary status legible.
+- No new audit event taxonomy/category was introduced; this is a projection layer using current event contracts.
+
+Partially implemented:
+- Event-derived posture is read-oriented and scoped to current MVP-supported paths.
+
+Planned/deferred:
+- Enterprise admin analytics, tenant-scoped governance dashboards, and long-horizon admin/tenancy reporting remain deferred.

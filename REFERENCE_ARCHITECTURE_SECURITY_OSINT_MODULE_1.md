@@ -892,3 +892,40 @@ Planned/deferred:
 - Core control-plane now exposes a thin Models workspace that projects model governance/execution posture from existing architecture contracts.
 - Visibility composes model registry metadata, local-first/provider-boundary routing posture, restriction hooks, and audit-correlated model events.
 - This update does not alter architecture boundaries: modules remain consumers of the core model layer, and model lifecycle platform breadth remains deferred.
+
+## Modules surface depth architecture note (MVP thin slice)
+
+Implemented now:
+- Added a core-owned Modules architecture/capability workspace that projects module registry truth and current module-to-core-surface relationships.
+- Security / OSINT Module 1 contribution is surfaced through existing workflow/run/case/evidence/approval/audit relationships rather than module-private infrastructure.
+- Implemented/partial/deferred scope framing is explicit to avoid over-claiming module-platform maturity.
+
+Partially implemented:
+- Current visibility is intentionally bounded to current registered module and existing contract signals.
+
+Planned/deferred:
+- Full module platform lifecycle (packaging/distribution/catalog/entitlements/install/update) remains intentionally outside MVP thin-slice scope.
+
+## Settings surface depth architecture note (MVP thin slice)
+
+Implemented now:
+- Settings is a core-owned composition surface that projects runtime/configuration posture from existing contracts (model registry/routing footprint, module/workflow participation, connector boundary posture, governance/readiness signals).
+- Configuration source-of-truth remains doc/config-file driven and is surfaced as operator entry points rather than mutable UI controls.
+
+Partially implemented:
+- Settings is visibility-first and tied to current MVP-supported runtime context.
+
+Planned/deferred:
+- Full settings mutation APIs/UI, secret lifecycle tooling, and enterprise-grade configuration governance workflows.
+
+## Admin / Tenancy surface depth architecture note (MVP thin slice)
+
+Implemented now:
+- Admin / Tenancy is a core-owned administration boundary surface that makes current single-operator local-first posture explicit.
+- Tenancy/isolation framing is grounded in current run/case/evidence/policy/audit correlation contracts and explicit deferred control inventory.
+
+Partially implemented:
+- Tenancy is represented at contract/posture level, not a fully enforced multi-tenant operations plane.
+
+Planned/deferred:
+- Tenant lifecycle controls, RBAC/SSO/IAM administration, delegated enterprise admin operations, and full SaaS tenancy management UX.

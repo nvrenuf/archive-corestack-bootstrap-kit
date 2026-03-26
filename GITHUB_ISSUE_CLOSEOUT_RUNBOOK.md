@@ -241,3 +241,17 @@ Implemented a thin core-owned Agents workspace that makes current agent-like exe
 ## Issue status note to paste for Models surface depth slice
 
 Implemented a thin core-owned Models workspace that makes current model governance and execution posture legible using existing contracts: model registry inventory, local-first/provider-boundary framing, workflow/module model usage visibility, policy/approval relevance, and audit-backed model route/restriction/result signals. Scope remains truthful and read-oriented (no fake model lifecycle/configuration editors), with full model-platform lifecycle depth explicitly deferred.
+
+## Modules surface depth slice closeout note
+
+Status update: completed for MVP thin-slice scope.
+
+Implemented a thin core-owned Modules workspace that makes current module architecture/capability posture legible for operators using existing contracts: module registration inventory, workflow contribution linkage, module-to-core-surface relationship mapping, and Security / OSINT Module 1 runtime posture visibility (runs/cases/evidence/approvals/audit context). Scope remains truthful and read-oriented; no marketplace, packaging/distribution, licensing, or install/update manager behavior was introduced.
+
+## Issue status note to paste for Settings + Admin / Tenancy surface depth slice
+
+Status update: completed for MVP thin-slice scope.
+
+Deepened the core-owned Settings and Admin / Tenancy routes from placeholders into truthful platform readiness workspaces. Settings now projects current runtime/config posture and governance/readiness signals from existing contracts, plus source-of-truth runbook/config entry points, without introducing fake settings editors. Admin / Tenancy now makes current single-operator local-first posture, current tenancy/admin boundaries, and explicitly deferred enterprise controls visible in-product without claiming tenant lifecycle/RBAC/SSO implementation.
+
+Keep enterprise authorization/isolation lifecycle controls (tenant management, RBAC/SSO/IAM, delegated admin operations) as follow-on non-MVP work.

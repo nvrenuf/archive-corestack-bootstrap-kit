@@ -14,6 +14,19 @@ Capability-oriented source of truth for CoreStack feature status.
 ### Planned / deferred
 - Broader operational automation and full platform-grade admin controls.
 
+## Security / OSINT visual system theme pass
+
+### Implemented now
+- Shared shell now uses a cohesive Security / OSINT control-plane visual identity: dark structural chrome (sidebar/nav), warm investigation-centered workspace surfaces, slate/steel-blue structural accents, and muted copper/amber review/evidence accents.
+- Panel, card, and section hierarchy was refined for clearer depth and scanability while preserving existing route structure and ownership framing.
+- Status/severity cues were normalized into restrained tone badges (danger/warning/success/neutral) so governance and investigation signals remain readable and consistent across key surfaces.
+
+### Partially implemented
+- This pass is intentionally MVP-scoped to current launcher/shell surfaces and does not yet include full automated visual regression/a11y contrast baselines.
+
+### Planned / deferred
+- Add formal visual regression snapshots and broader accessibility verification across future deeper CRUD/administration surfaces.
+
 ## Governed tool gateway (web.fetch + web.search)
 
 ### Implemented now
@@ -150,3 +163,49 @@ Capability-oriented source of truth for CoreStack feature status.
 
 ### Planned / deferred
 - Full model-platform lifecycle management (provider onboarding/configuration, deployment/fleet controls, benchmark/evaluation lab, and training/fine-tuning administration).
+
+
+## Modules architecture/capability workspace (core-owned)
+
+### Implemented now
+- Modules route now provides a thin, truthful architecture/capability workspace instead of a simple placeholder.
+- The page explicitly defines what a module is in Corestack (domain capability package contributing workflows/data/extension behavior) and clarifies that nav items are not modules.
+- Registered module inventory is visible in-product using current module registry contract data.
+- Security / OSINT Module 1 contribution is mapped with workflow linkage plus current run/case/evidence/approval/audit posture derived from existing core contracts.
+- Module participation across core-owned surfaces is shown with explicit implemented-now relationship framing.
+
+### Partially implemented
+- Modules visibility is read-oriented and scoped to the currently registered Module 1 and current MVP workflow path.
+- Participation visibility across Policies/Models/Connectors/Agents is projected from existing contracts and does not include deep per-module administration.
+
+### Planned / deferred
+- Module packaging/distribution lifecycle, marketplace/catalog UX, licensing/entitlements, and install/update management remain intentionally deferred.
+
+
+## Settings configuration/readiness workspace (core-owned)
+
+### Implemented now
+- Settings is now a thin but meaningful core-owned configuration/readiness surface instead of a generic placeholder.
+- The page projects current runtime posture from existing contracts: local-vs-external model routing footprint, module/workflow participation, governed connector path count, and current run/case/approval/governance-event readiness signals.
+- Operator-visible entry points to current runbook/threat-model/configuration source docs are listed in-product so environment changes remain truthful and documentation-led.
+
+### Partially implemented
+- Visibility is stronger, but mutation remains outside the UI; configuration changes are still runbook/config-file driven.
+- Readiness framing is intentionally scoped to current MVP-supported flows and local/in-memory runtime paths.
+
+### Planned / deferred
+- In-product settings mutation APIs/editors, secret-management lifecycle UX, and enterprise day-2 configuration governance tooling.
+
+
+## Admin / Tenancy posture workspace (core-owned)
+
+### Implemented now
+- Admin / Tenancy is now a thin core-owned administration/readiness workspace that makes current boundaries explicit without pretending enterprise controls exist.
+- The page surfaces current admin baseline posture (single-operator local-first), governance signal visibility, tenancy-boundary notes grounded in current run/case/evidence/policy/audit contracts, and explicit deferred-control inventory.
+- Relationship to future authorization/isolation work is documented in-product: current contracts carry correlation/actor context but do not implement full tenant lifecycle or IAM controls.
+
+### Partially implemented
+- Tenancy posture remains terminology/contract-level and visibility-oriented, not a full runtime-enforced multi-tenant operations platform.
+
+### Planned / deferred
+- Tenant lifecycle management UX, RBAC/SSO administration, delegated enterprise admin controls, and full multi-tenant SaaS control-plane operations.

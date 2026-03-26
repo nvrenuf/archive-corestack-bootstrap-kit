@@ -356,13 +356,207 @@ function getRouteContext(routeId) {
     };
   }
 
-  if (routeId === "settings" || routeId === "admin-tenancy") {
-    return {};
+  if (routeId === "settings") {
+    const approvals = approvalStore.listApprovals();
+    const models = modelRegistry.list();
+    const policyDecisionCount = runs.reduce((count, run) => count + (run.policyDecisions?.length ?? 0), 0);
+    const governanceEventCount = auditStore
+      .listEvents()
+      .filter((event) =>
+        event.event_type === "model.route.selected"
+        || event.event_type === "model.execution.completed"
+        || event.event_type === "model.execution.restricted"
+        || event.event_type === "tool.execution.decisioned"
+        || event.event_type === "tool.execution.result").length;
+
+    return {
+      runtimeDefaults: {
+        localModelCount: models.filter((model) => model.providerType === "local").length,
+        externalModelCount: models.filter((model) => model.providerType !== "local").length,
+        moduleCount: modules.length,
+        workflowCount: workflowRegistry.list().length,
+        connectorPathCount: 2,
+      },
+      readinessSignals: {
+        runCount: runs.length,
+        caseCount: cases.length,
+        pendingApprovalCount: approvals.filter((approval) => approval.status === "pending").length,
+        policyDecisionCount,
+        governanceEventCount,
+      },
+      coreDependencyPosture: [
+        {
+          area: "Policies",
+          state: "implemented now",
+          notes: "Run policy decisions and approval checkpoints define the active governance boundary for runtime behavior.",
+        },
+        {
+          area: "Models",
+          state: "implemented now",
+          notes: "Model routing remains local-first by contract, with explicit restriction hooks and audit visibility.",
+        },
+        {
+          area: "Connectors",
+          state: "partially implemented",
+          notes: "Governed web.fetch/web.search paths are active; connector onboarding and credential lifecycle tooling are deferred.",
+        },
+        {
+          area: "Admin / Tenancy",
+          state: "planned/deferred",
+          notes: "Settings posture references tenancy/admin boundaries but does not implement RBAC, SSO, or tenant lifecycle controls.",
+        },
+      ],
+      docsEntryPoints: [
+        {
+          label: "Tool-system runbook",
+          path: "docs/tool-system/RUNBOOK.md",
+          notes: "Defines current supported runtime/config operation path and validation expectations.",
+        },
+        {
+          label: "Threat model",
+          path: "docs/tool-system/THREAT_MODEL.md",
+          notes: "Documents trust boundaries, fail-closed assumptions, and local-first constraints.",
+        },
+        {
+          label: "Configuration defaults",
+          path: "config/global.defaults.yaml",
+          notes: "Captures baseline defaults consumed by MVP runtime paths.",
+        },
+      ],
+    };
+  }
+
+  if (routeId === "admin-tenancy") {
+    const approvals = approvalStore.listApprovals();
+    const governanceEventCount = auditStore
+      .listEvents()
+      .filter((event) =>
+        event.event_type === "run.lifecycle.created"
+        || event.event_type === "approval.lifecycle.requested"
+        || event.event_type === "tool.execution.decisioned"
+        || event.event_type === "model.execution.restricted").length;
+
+    return {
+      adminBaseline: {
+        mode: "single-operator local baseline",
+        runCount: runs.length,
+        caseCount: cases.length,
+        approvalCount: approvals.length,
+        pendingApprovalCount: approvals.filter((approval) => approval.status === "pending").length,
+        governanceEventCount,
+      },
+      tenancyBoundaries: [
+        {
+          area: "Case/run/evidence linkage",
+          state: "implemented now",
+          notes: "Workflow outputs remain correlated through core contracts so future tenant isolation can be applied consistently.",
+        },
+        {
+          area: "Policy and audit correlation",
+          state: "implemented now",
+          notes: "Actor/correlation metadata is retained on governed actions and review events for future scoped access layers.",
+        },
+        {
+          area: "Runtime isolation controls",
+          state: "partially implemented",
+          notes: "Current MVP is local-first and single-operator, without a full runtime-enforced tenant segmentation plane.",
+        },
+      ],
+      deferredControls: [
+        {
+          control: "Tenant lifecycle management",
+          status: "planned/deferred",
+          notes: "No create/suspend/delete tenant workflows are implemented in this slice.",
+        },
+        {
+          control: "Role-based authorization",
+          status: "planned/deferred",
+          notes: "No RBAC/SSO control surface or policy-bound identity administration is implemented.",
+        },
+        {
+          control: "Delegated admin operations",
+          status: "planned/deferred",
+          notes: "No multi-admin delegation, scoped approval routing, or enterprise IAM integration is available.",
+        },
+      ],
+    };
   }
 
   if (routeId === "modules") {
+    const workflows = workflowRegistry.list();
+    const approvals = approvalStore.listApprovals();
+    const evidenceItems = evidenceStore.listEvidenceItems();
+    const artifacts = evidenceStore.listArtifacts();
+    const findings = evidenceStore.listFindings();
+    const moduleWorkflowLinks = workflows
+      .filter((workflow) => workflow.moduleId)
+      .map((workflow) => ({
+        workflowId: workflow.id,
+        workflowName: workflow.name,
+        moduleId: workflow.moduleId,
+      }));
+
+    const module1Runs = runs.filter((run) => run.moduleId === "security-osint-module-1");
+    const module1RunIds = new Set(module1Runs.map((run) => run.runId));
+    const module1CaseIds = new Set(module1Runs.map((run) => run.caseId).filter(Boolean));
+    const module1AuditEvents = auditStore
+      .listEvents()
+      .filter((event) => module1RunIds.has(event.correlation?.run_id));
+
     return {
       modules,
+      moduleWorkflowLinks,
+      surfaceRelationships: [
+        {
+          surface: "Launcher",
+          state: "implemented now",
+          notes: "Module-contributed workflow start paths are launched through the shared core launcher.",
+        },
+        {
+          surface: "Runs / Cases / Evidence",
+          state: "implemented now",
+          notes: "Module workflow execution writes to core run, case, evidence, artifact, and finding contracts.",
+        },
+        {
+          surface: "Investigation Workspace / Logs / Audit",
+          state: "implemented now",
+          notes: "Module-linked investigations are reviewed through shared workspace and correlated audit/event surfaces.",
+        },
+        {
+          surface: "Policies / Models / Connectors / Agents",
+          state: "partially implemented",
+          notes: "Current module participation is visible through existing policy, model-routing, tool-gateway, and execution-role posture.",
+        },
+        {
+          surface: "Module platform lifecycle",
+          state: "planned / deferred",
+          notes: "No marketplace, packaging/distribution, entitlement, or install/update manager is implemented in this MVP slice.",
+        },
+      ],
+      module1Capability: {
+        workflowId: "security-osint.alert-triage",
+        workflowName: "Alert triage and investigation",
+        runCount: module1Runs.length,
+        caseCount: module1CaseIds.size,
+        evidenceCount: evidenceItems.filter((item) => module1RunIds.has(item.runId)).length,
+        artifactCount: artifacts.filter((item) => module1RunIds.has(item.runId)).length,
+        findingCount: findings.filter((item) => module1RunIds.has(item.runId)).length,
+        approvalCount: approvals.filter((approval) => module1RunIds.has(approval.links?.runId)).length,
+        auditEventCount: module1AuditEvents.length,
+      },
+      statusFraming: {
+        implementedNow: [
+          "Module registration inventory is visible with current module/capability posture.",
+          "Security / OSINT Module 1 contribution to workflow execution and investigation data paths is explicitly mapped.",
+          "Core-owned surface relationship framing shows how module capability is consumed across existing control-plane surfaces.",
+        ],
+        partiallyImplemented: [
+          "Participation across policies/models/connectors/agents is visibility-first and bounded to the current workflow path.",
+        ],
+        plannedDeferred: [
+          "Module packaging, marketplace/catalog, licensing/entitlements, and lifecycle management UX remain intentionally out of scope.",
+        ],
+      },
     };
   }
 

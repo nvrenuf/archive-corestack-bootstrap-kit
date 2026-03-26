@@ -104,7 +104,7 @@ test("logs-audit route renders filtered correlated events for investigation dril
   assert.match(rendered, /cases-evidence\?caseId=case-1/);
 });
 
-test("module hook and modules route render registered module visibility", () => {
+test("modules route renders architecture/capability visibility with truthful scope framing", () => {
   const modules = [{
     id: "security-osint-module-1",
     name: "Security / OSINT Module 1",
@@ -113,11 +113,61 @@ test("module hook and modules route render registered module visibility", () => 
   }];
 
   const hook = renderModuleHook(modules);
-  const modulesSurface = renderRouteContent(getRoute("modules"), { modules });
+  const modulesSurface = renderRouteContent(getRoute("modules"), {
+    modules,
+    moduleWorkflowLinks: [{
+      workflowId: "security-osint.alert-triage",
+      workflowName: "Alert triage and investigation",
+      moduleId: "security-osint-module-1",
+    }],
+    surfaceRelationships: [{
+      surface: "Launcher",
+      state: "implemented now",
+      notes: "Module-contributed workflow start paths are launched through the shared core launcher.",
+    }],
+    module1Capability: {
+      workflowId: "security-osint.alert-triage",
+      workflowName: "Alert triage and investigation",
+      runCount: 2,
+      caseCount: 1,
+      evidenceCount: 3,
+      artifactCount: 2,
+      findingCount: 1,
+      approvalCount: 1,
+      auditEventCount: 8,
+    },
+    statusFraming: {
+      implementedNow: ["Module registration inventory is visible with current module/capability posture."],
+      partiallyImplemented: ["Participation across policies/models/connectors/agents is visibility-first."],
+      plannedDeferred: ["Module packaging and marketplace behavior remain out of scope."],
+    },
+  });
 
   assert.match(hook, /Security \/ OSINT Module 1/);
-  assert.match(modulesSurface, /Registered domain capabilities are visible here/);
+  assert.match(modulesSurface, /Core-owned module architecture workspace/);
+  assert.match(modulesSurface, /A module is a domain capability package/);
   assert.match(modulesSurface, /1 capability\(ies\)/);
+  assert.match(modulesSurface, /Runs observed:<\/strong> 2/);
+  assert.match(modulesSurface, /Module packaging and marketplace behavior remain out of scope/);
+});
+
+test("modules route handles sparse context without implying fake module management controls", () => {
+  const modulesSurface = renderRouteContent(getRoute("modules"), {
+    modules: [],
+    moduleWorkflowLinks: [],
+    surfaceRelationships: [],
+    module1Capability: null,
+    statusFraming: {
+      implementedNow: ["Module registration inventory is visible with current module/capability posture."],
+      partiallyImplemented: ["Participation across policies/models/connectors/agents is visibility-first."],
+      plannedDeferred: ["No marketplace, packaging/distribution, entitlement, or install/update manager."],
+    },
+  });
+
+  assert.match(modulesSurface, /No modules are currently registered in this environment/);
+  assert.match(modulesSurface, /No module-to-surface relationships are currently mapped/);
+  assert.match(modulesSurface, /No module workflow links are currently registered/);
+  assert.match(modulesSurface, /read-oriented and intentionally avoids fake install\/update or marketplace controls/i);
 });
 
 test("agents surface renders orchestration/readiness visibility with truthful status framing", () => {
@@ -273,7 +323,7 @@ test("models surface handles sparse data without implying fake model controls", 
   assert.match(rendered, /does not introduce fake provider or lifecycle editors/i);
 });
 
-test("connectors surface renders governed readiness/workspace framing while settings and admin remain intentional pages", () => {
+test("connectors, settings, and admin-tenancy surfaces render truthful readiness framing", () => {
   const connectors = renderRouteContent(getRoute("connectors"), {
     connectorInventory: [
       {
@@ -304,8 +354,44 @@ test("connectors surface renders governed readiness/workspace framing while sett
     localModelCount: 1,
     externalModelCount: 0,
   });
-  const settings = renderRouteContent(getRoute("settings"));
-  const admin = renderRouteContent(getRoute("admin-tenancy"));
+  const settings = renderRouteContent(getRoute("settings"), {
+    runtimeDefaults: {
+      localModelCount: 1,
+      externalModelCount: 0,
+      moduleCount: 1,
+      workflowCount: 1,
+      connectorPathCount: 2,
+    },
+    readinessSignals: {
+      runCount: 2,
+      caseCount: 1,
+      pendingApprovalCount: 1,
+      policyDecisionCount: 3,
+      governanceEventCount: 5,
+    },
+    coreDependencyPosture: [
+      { area: "Policies", state: "implemented now", notes: "Governed decisions active." },
+    ],
+    docsEntryPoints: [
+      { label: "Tool-system runbook", path: "docs/tool-system/RUNBOOK.md", notes: "Supported run path." },
+    ],
+  });
+  const admin = renderRouteContent(getRoute("admin-tenancy"), {
+    adminBaseline: {
+      mode: "single-operator local baseline",
+      runCount: 2,
+      caseCount: 1,
+      approvalCount: 2,
+      pendingApprovalCount: 1,
+      governanceEventCount: 4,
+    },
+    tenancyBoundaries: [
+      { area: "Policy and audit correlation", state: "implemented now", notes: "Actor metadata available." },
+    ],
+    deferredControls: [
+      { control: "Role-based authorization", status: "planned/deferred", notes: "No RBAC surface." },
+    ],
+  });
 
   assert.match(connectors, /Operator workspace for controlled integration boundaries/);
   assert.match(connectors, /Controlled integration paths available now/);
@@ -313,10 +399,14 @@ test("connectors surface renders governed readiness/workspace framing while sett
   assert.match(connectors, /Policy outcomes touching connector\/tool execution — allow: 1, require approval: 1, deny: 0/);
   assert.match(connectors, /connector lifecycle administration/);
   assert.match(connectors, /without introducing fake configuration controls/);
-  assert.match(settings, /Configuration templates and runbooks define the current operational contract/);
-  assert.match(settings, /In-product settings editors remain deferred/);
+  assert.match(settings, /Current MVP configuration assumptions/);
+  assert.match(settings, /Local-first model routes in registry: 1/);
+  assert.match(settings, /Tool-system runbook/);
+  assert.match(settings, /settings editors and persistent mutation APIs remain deferred/);
   assert.match(admin, /single-operator local baseline/);
-  assert.match(admin, /Tenant lifecycle and role management UI remain deferred/);
+  assert.match(admin, /Boundaries visible in current contracts/);
+  assert.match(admin, /Role-based authorization/);
+  assert.match(admin, /multi-tenant SaaS control-plane operations UX remains deferred/);
 });
 
 
@@ -329,6 +419,24 @@ test("connectors surface handles sparse context without implying connector manag
   assert.match(connectors, /No connector inventory entries are currently registered/);
   assert.match(connectors, /No module connector usage is currently mapped/);
   assert.match(connectors, /provisioning automation remain deferred/);
+});
+
+test("settings and admin-tenancy surfaces handle sparse context without fake controls", () => {
+  const settings = renderRouteContent(getRoute("settings"), {
+    coreDependencyPosture: [],
+    docsEntryPoints: [],
+  });
+  const admin = renderRouteContent(getRoute("admin-tenancy"), {
+    tenancyBoundaries: [],
+    deferredControls: [],
+  });
+
+  assert.match(settings, /Local-first model routes in registry: 0/);
+  assert.match(settings, /No core dependency posture entries are currently mapped/);
+  assert.match(settings, /No documentation entry points are currently listed/);
+  assert.match(admin, /Current baseline mode: single-operator local baseline/);
+  assert.match(admin, /No tenancy boundary entries are currently mapped/);
+  assert.match(admin, /No deferred control entries are currently listed/);
 });
 
 test("runs route renders thin run detail review with linkage summaries", () => {
@@ -487,7 +595,7 @@ test("files-artifacts route renders thin artifact and evidence detail with linke
   assert.match(rendered, /artifact:\/\/local\/run-1\/file\.json/);
   assert.match(rendered, /Linked evidence items: 1/);
   assert.match(rendered, /Linked artifacts: 1/);
-  assert.match(rendered, /Severity:\s*<\/strong> medium/);
+  assert.match(rendered, /Severity:\s*<\/strong>\s*<span class="tone-badge tone-warning">medium<\/span>/);
   assert.match(rendered, /evidence\.object\.mutated/);
 });
 

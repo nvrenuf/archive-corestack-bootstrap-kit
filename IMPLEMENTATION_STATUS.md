@@ -6,11 +6,11 @@
 
 ## Latest issue update
 
-- Issue name: Models surface depth slice (core-owned model governance/execution visibility)
-- Status: completed for MVP thin-slice scope
-- Commit hash: `current branch head`
-- Short note: Deepened Models from placeholder framing into a thin, truthful core-owned governance/execution workspace by reusing existing model registry/routing, execution restriction hooks, workflow/module usage, policy/approval posture, and audit/event context with explicit implemented vs partial vs deferred status.
-- Next recommended issue: Continue non-MVP breadth for #9 model-platform lifecycle depth plus #21 audit/security taxonomy/operations depth.
+- Issue name: Left-nav hover/active readability contrast refinement (Corestack shell)
+- Status: completed targeted shell readability fix
+- Commit hash: `e3a9e72`
+- Short note: Fixed left-nav readability contrast by keeping nav text high-contrast through hover, active, and active+hover/focus-visible states while preserving existing shell structure, route behavior, and Security/OSINT visual-theme treatments.
+- Next recommended issue: Add thin accessibility/contrast verification and per-surface visual regression baselines so subsequent UI depth slices preserve the new control-plane theme consistency.
 
 ## Completed issues (verified in `main`)
 
@@ -36,6 +36,9 @@
 - [x] Implement connectors governance/readiness surface depth slice (`current branch head`, PR TBD)
 - [x] Implement agents orchestration/readiness surface depth slice (`current branch head`, PR TBD)
 - [x] Implement models governance/execution surface depth slice (`current branch head`, PR TBD)
+- [x] Implement modules architecture/capability surface depth slice (`current branch head`, PR TBD)
+- [x] Implement settings and admin/tenancy readiness posture surface depth slice (`current branch head`, PR TBD)
+- [x] Apply Security / OSINT visual theme pass across current core-owned MVP shell and surfaces (`current branch head`, PR TBD)
 - [x] Docs/runbook/configuration/threat-model notes hardened for the MVP-supported operation path (`current branch head`, PR TBD); full platform-grade operations/documentation breadth remains out of scope.
 
 ## In-progress issues
@@ -47,7 +50,7 @@
 
 ## Next recommended issue
 
-- Continue non-MVP breadth for #9 model-platform lifecycle depth plus #21 audit/security taxonomy/operations depth.
+- Continue non-MVP breadth for enterprise authorization/isolation administration depth (RBAC/SSO/tenant lifecycle controls) plus #21 audit/security taxonomy/operations depth.
 
 ## References
 
